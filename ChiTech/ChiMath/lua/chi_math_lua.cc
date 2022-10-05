@@ -27,7 +27,9 @@ void chi_math::lua_utils::RegisterLuaEntities(lua_State *L)
   LUA_FMACRO1(chiCreateLineQuadrature);
   LUA_FMACRO1(chiGetProductQuadrature);
   LUA_FMACRO1(chiOptimizeAngularQuadratureForPolarSymmetry);
-
+  LUA_FMACRO1(chiCreateAngularQuadratureTriangle);
+  LUA_FMACRO1(chiPrintD2M);
+  LUA_FMACRO1(chiPrintM2D);
 
   LUA_FMACRO1(chiCreateSLDFESQAngularQuadrature);
   LUA_FMACRO1(chiLocallyRefineSLDFESQAngularQuadrature);
