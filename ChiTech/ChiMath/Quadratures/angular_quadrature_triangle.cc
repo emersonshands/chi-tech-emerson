@@ -88,28 +88,29 @@ TriangleInit(unsigned int sn)
 void chi_math::AngularQuadratureTriangle::
 BuildDiscreteToMomentOperator()
 {
-  //Use the optimization function to re-adjust the weights
-  OptimizeForPolarSymmetry(2.0*M_PI);
   //Build the d2m
-  if (not d2m_op_built and method==1) {
+  if (not d2m_op_built and method==1)
+  {
     d2m_op.clear();
-    double normalization = 2.0*M_PI;
     unsigned int l_max = sn;
     MakeHarmonicIndices(l_max);
     unsigned int num_angles = abscissae.size();
     unsigned int num_moms = m_to_ell_em_map.size();
-    for (const auto &ell_em: m_to_ell_em_map) {
+    for (const auto &ell_em: m_to_ell_em_map)
+    {
       std::vector<double> cur_mom;
       cur_mom.reserve(num_angles);
 
-      for (int n = 0; n < num_angles; n++) {
+      for (int n = 0; n < num_angles; n++)
+      {
         const auto &cur_angle = abscissae[n];
         //We need to change this ylm based on what method we use
-        double value = chi_math::Ylm(ell_em.ell, ell_em.m,
+        double value =chi_math::Ylm(ell_em.ell, ell_em.m,
                                      cur_angle.phi,
                                      cur_angle.theta);
+        chi::log.Log0() << value << " Here is values "<< std::endl;
         double w = weights[n];
-        cur_mom.push_back(value * w);
+        cur_mom.push_back(value*w);
       }
       d2m_op.push_back(cur_mom);
     }
