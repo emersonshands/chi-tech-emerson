@@ -10,7 +10,10 @@ int chiPrintD2M(lua_State* L)
   int num_args = lua_gettop(L);
   if (num_args<1)
     LuaPostArgAmountError(fname ,1,num_args);
+  if (num_args>1)
+    LuaPostArgAmountError(fname ,1,num_args);
   int handle = lua_tonumber(L,1);
+
   std::shared_ptr<chi_math::ProductQuadrature> quad;
   try{
     auto ang_quad = chi::angular_quadrature_stack.at(handle);
@@ -46,9 +49,12 @@ int chiPrintM2D(lua_State* L)
   int num_args = lua_gettop(L);
   if (num_args<1)
     LuaPostArgAmountError(fname ,1,num_args);
+  if (num_args>1)
+    LuaPostArgAmountError(fname ,1,num_args);
   int handle = lua_tonumber(L,1);
   std::cout << handle << std::endl;
-  auto& quad = chi::GetStackItem<chi_math::AngularQuadrature>(chi::angular_quadrature_stack,handle,fname);
+  auto& quad = chi::GetStackItem<chi_math::AngularQuadrature>
+    (chi::angular_quadrature_stack,handle,fname);
   auto op = quad.GetMomentToDiscreteOperator();
   chi::log.Log() << "Now printing the M2D Matrix";
   for (std::vector<double> u : op)
