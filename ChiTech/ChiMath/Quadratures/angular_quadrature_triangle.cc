@@ -21,15 +21,12 @@ MakeHarmonicIndices(unsigned int l_max)
 {
   const int L = static_cast<int>(l_max);
   //Figure out what to do in dimensions other than 2d
-  if(method == 1)
+  if (m_to_ell_em_map.empty())
   {
-    if (m_to_ell_em_map.empty())
-    {
-      for (int ell = 0; ell <= L; ++ell)
-        for (int m = -ell; m <= ell; m += 2)
-          if (ell == L and m > 0) break;
-          else m_to_ell_em_map.emplace_back(ell, m);
-    }
+    for (int ell = 0; ell <= L; ++ell)
+      for (int m = -ell; m <= ell; m += 2)
+        if (ell == L and m >= 0) break;
+        else m_to_ell_em_map.emplace_back(ell, m);
   }
 }
 
@@ -45,21 +42,32 @@ TriangleInit(unsigned int sn)
   // that of the quadrature
   const auto old_omega = chi_math::QuadratureGaussLegendre(sn);
   // formulate the triangular quadrature
+  //chi_math::PrintVector(old_omega.weights);
+
   int num_div = 1;
-  for(auto u : old_omega.qpoints){
+  int weightPos =0;
+  for(auto u : old_omega.qpoints)
+  {
     double deltaVPhi = M_PI/(2.0*(double)num_div);
     //By polar symmetry we want to remove any negative polar angles
-    if (u.x < 0) continue;
-    for(int v=0; v<num_div;++v){
+    if (u.x <= 0.0)
+    {
+      weightPos++;
+      continue;
+    }
+    for(int v=0; v<num_div;++v)
+    {
       double phi = deltaVPhi/2.0 + (double)v*deltaVPhi;
       double theta = acos(u.x);
       new_omega.x = sin(theta)*cos(phi);
       new_omega.y = sin(theta)*sin(phi);
       new_omega.z = cos(theta);
-      weights.push_back(old_omega.weights[num_div-1]);
+      weights.push_back(old_omega.weights[weightPos]);
       omegas.emplace_back(new_omega);
       abscissae.emplace_back(phi,theta);
+
     }
+    weightPos++;
     num_div++;
   }
   //This will loop through the other 3 parts of the unit circle
@@ -67,12 +75,15 @@ TriangleInit(unsigned int sn)
   double xsign = -1.0;
   double ysign = 1.0;
   size_t size = weights.size();
-  for(int k=1;k<=3;++k){
-    if(k>1){
+  for(int k=1;k<=3;++k)
+  {
+    if(k>1)
+    {
       ysign=-1.0;
       if(k>2) xsign =1.0;
     }
-    for(size_t l=0;l<size;++l){
+    for(size_t l=0;l<size;++l)
+    {
       double phi = abscissae[l].phi+k*(M_PI/2.0);
       double theta = abscissae[l].theta;
       new_omega.x = omegas[l].x*xsign;
@@ -81,48 +92,10 @@ TriangleInit(unsigned int sn)
       weights.push_back(weights[l]);
       omegas.emplace_back(new_omega);
       abscissae.emplace_back(phi,theta);
+
     }
   }
-}
-
-void chi_math::AngularQuadratureTriangle::
-BuildDiscreteToMomentOperator()
-{
-  //Build the d2m
-  if (not d2m_op_built and method==1)
-  {
-    d2m_op.clear();
-    unsigned int l_max = sn;
-    MakeHarmonicIndices(l_max);
-    unsigned int num_angles = abscissae.size();
-    unsigned int num_moms = m_to_ell_em_map.size();
-    for (const auto &ell_em: m_to_ell_em_map)
-    {
-      std::vector<double> cur_mom;
-      cur_mom.reserve(num_angles);
-
-      for (int n = 0; n < num_angles; n++)
-      {
-        const auto &cur_angle = abscissae[n];
-        //We need to change this ylm based on what method we use
-        double value =chi_math::Ylm(ell_em.ell, ell_em.m,
-                                     cur_angle.phi,
-                                     cur_angle.theta);
-        chi::log.Log0() << value << " Here is values "<< std::endl;
-        double w = weights[n];
-        cur_mom.push_back(value*w);
-      }
-      d2m_op.push_back(cur_mom);
-    }
-    d2m_op_built = true;
-  }
-}
-
-void chi_math::AngularQuadratureTriangle::
-BuildMomentToDiscreteOperator()
-{
-  if (not d2m_op_built) BuildDiscreteToMomentOperator();
-  //method 1 is just the inverse of d2m
-  if (method == 1)m2d_op = chi_math::Inverse(d2m_op);
-  m2d_op_built = true;
+  //Now we need to call optimize for polar symmetry to normalize
+  // the weights to 4pi to correctly integrate over the sphere
+  chi_math::AngularQuadrature::OptimizeForPolarSymmetry(4.0*M_PI);
 }

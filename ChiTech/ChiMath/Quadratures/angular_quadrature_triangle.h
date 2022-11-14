@@ -3,6 +3,8 @@
 
 #include "ChiMath/Quadratures/angular_quadrature_base.h"
 #include "ChiMath/Quadratures/quadrature_gausslegendre.h"
+#include "ChiMath/chi_math.h"
+#include "ChiMath/chi_math_04_gaussian_elimination_pivoting.h"
 
 namespace chi_math
 {
@@ -17,7 +19,7 @@ protected:
   const unsigned int method;
 public:
   explicit
-  AngularQuadratureTriangle(unsigned int in_az_angles, unsigned int in_method);
+  AngularQuadratureTriangle(unsigned int sn, unsigned int in_method);
 protected:
   void TriangleInit(unsigned int sn);
   void MakeHarmonicIndices(unsigned int l_max);
@@ -26,4 +28,5 @@ public:
   void BuildDiscreteToMomentOperator();
   void BuildMomentToDiscreteOperator();
 };
+
 #endif //ANGULAR_QUADRATURE_TRIANGLE_H
