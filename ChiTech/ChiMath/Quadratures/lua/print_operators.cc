@@ -1,7 +1,7 @@
 #include "chi_runtime.h"
 #include "ChiLua/chi_lua.h"
 #include "ChiMath/Quadratures/angular_quadrature_base.h"
-#include "ChiMath/Quadratures/product_quadrature.h"
+#include "ChiMath/Quadratures/angular_product_quadrature.h"
 #include "chi_log.h"
 
 int chiPrintD2M(lua_State* L)

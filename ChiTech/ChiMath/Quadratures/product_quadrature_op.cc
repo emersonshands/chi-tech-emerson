@@ -100,7 +100,8 @@ OptimizeForPolarSymmetry(const double normalization)
     for (double& w : new_weights)
       w *= normalization/weight_sum;
 
-  InitializeWithCustom(new_azimu_ang, new_polar_ang,new_weights,false);
+  chi_math::ProductQuadrature::AssembleCosines(new_azimu_ang,
+                                               new_polar_ang,new_weights,false);
   polar_ang = new_polar_ang;
   azimu_ang = new_azimu_ang;
 }
