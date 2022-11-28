@@ -15,11 +15,15 @@ class chi_math::AngularQuadratureTriangle :
   public chi_math::AngularQuadrature
 {
 protected:
-  const unsigned int sn;
   const unsigned int method;
+  const unsigned int sn;
+  const unsigned int moments;
 public:
   explicit
   AngularQuadratureTriangle(unsigned int sn, unsigned int in_method);
+  explicit
+  AngularQuadratureTriangle(unsigned int sn, unsigned int in_method,
+                            unsigned int inmoments);
 protected:
   void TriangleInit(unsigned int sn);
   void MakeHarmonicIndices(unsigned int l_max);
@@ -27,6 +31,8 @@ protected:
 public:
   void BuildDiscreteToMomentOperator();
   void BuildMomentToDiscreteOperator();
+
+  void FilterMoments();
 };
 
 #endif //ANGULAR_QUADRATURE_TRIANGLE_H

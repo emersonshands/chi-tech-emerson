@@ -8,10 +8,22 @@
 #include "ChiMath/chi_math.h"
 
 chi_math::AngularQuadratureTriangle::
-AngularQuadratureTriangle(unsigned int sn_in,
-                          unsigned int in_method) :
+AngularQuadratureTriangle(unsigned int in_method,
+                          unsigned int sn_in) :
+  method(in_method),
   sn(sn_in),
-  method(in_method)
+  moments(0)
+{
+  TriangleInit(sn);
+}
+
+chi_math::AngularQuadratureTriangle::
+AngularQuadratureTriangle(unsigned int in_method,
+                          unsigned int sn_in,
+                          unsigned int inmoments) :
+  method(in_method),
+  sn(sn_in),
+  moments(inmoments)
 {
   TriangleInit(sn);
 }
@@ -33,6 +45,20 @@ MakeHarmonicIndices(unsigned int l_max)
 void chi_math::AngularQuadratureTriangle::
 TriangleInit(unsigned int sn)
 {
+  if (moments<0 or moments>sn)
+  {
+    printf("The moments user is asking for is greater than or less "
+           "than the allowable moments for sn\n"
+           "Given value %i, sn=%i\n",moments,sn);
+    chi::log.Log0Error() << "Mismatch between given moments to cut and sn used";
+    chi::Exit(510);
+  }
+  if (moments == sn)
+  {
+    printf("The moments user is asking for is equal to the given sn\n"
+           "All values used\n"
+           "Given value %i, sn=%i\n",moments,sn);
+  }
   //Need to form the harmonics first/ these change based on the method
   //Clear the old m_to_ell mapping and redo it based on the method
   m_to_ell_em_map.clear();

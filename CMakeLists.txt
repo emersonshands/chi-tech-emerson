@@ -164,7 +164,7 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${MPI_CXX_LINK_FLAGS}")
 add_subdirectory("${CHI_TECH_DIR}/ThirdParty")
 
 #================================================ Define source directories
-set(SOURCES "${CHI_TECH_DIR}/ChiTech/chi_runtime.cc")
+set(SOURCES "${CHI_TECH_DIR}/ChiTech/chi_runtime.cc" ChiTech/ChiMath/Quadratures/angular_quadrature_triangle.cc ChiTech/ChiMath/Quadratures/angular_quadrature_triangle.h ChiTech/ChiMath/Quadratures/lua/create_angular_quadrature_triangle.cc ChiTech/ChiMath/Quadratures/lua/print_operators.cc)
 add_subdirectory("${CHI_TECH_DIR}/ChiTech/ChiConsole")
 add_subdirectory("${CHI_TECH_DIR}/ChiTech/ChiLua")
 add_subdirectory("${CHI_TECH_DIR}/ChiTech/ChiMath")

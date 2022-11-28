@@ -12,14 +12,18 @@ namespace chi_math
 class chi_math::ProductQuadratureOp : public chi_math::ProductQuadrature
 {
 protected:
+
   chi_math::ProductQuadrature quad;
   const int method;
   int sn;
+  const int moments;
 private:
 void CheckInputs();
 public:
-  ProductQuadratureOp(const ProductQuadrature& inquad, int inmethod,
-                      int order);
+  ProductQuadratureOp(const ProductQuadrature &inquad,
+                     int inmethod, int order);
+  ProductQuadratureOp(const ProductQuadrature& inquad,
+                      int inmethod, int order, int moments);
 
   double InnerProduct(const VecDbl& f, const VecDbl& g, const VecDbl& wt);
   void MakeHarmonicIndices();
@@ -27,5 +31,6 @@ public:
   void BuildMomentToDiscreteOperator();
   // Had to match up to dr. morel's symmetry;
   void OptimizeForPolarSymmetry(double normalization) override;
+  void FilterMoments();
 };
 #endif //CHITECHMATRIXWORK_PRODUCT_QUADRATURE_OP_H
