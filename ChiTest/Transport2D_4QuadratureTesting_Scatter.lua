@@ -52,7 +52,7 @@ src={}
 for g=1,num_groups do
     src[g] = 0.0
 end
-src[0] = 1.0
+src[0] = 1.0/4.0/math.pi;
 
 chiPhysicsMaterialSetProperty(materials[1],ISOTROPIC_MG_SOURCE,FROM_ARRAY,src)
 
@@ -93,8 +93,13 @@ bsrc={}
 for g=1,num_groups do
     bsrc[g] = 0.0
 end
-bsrc[1] = 1.0/4.0/math.pi;
-chiLBSSetProperty(phys1,BOUNDARY_CONDITION,ZMIN,LBSBoundaryTypes.INCIDENT_ISOTROPIC,bsrc);
+--chiLBSSetProperty(phys1,BOUNDARY_CONDITION,ZMIN,LBSBoundaryTypes.VACUUM);
+--chiLBSSetProperty(phys1,BOUNDARY_CONDITION,ZMAX,LBSBoundaryTypes.VACUUM);
+--chiLBSSetProperty(phys1,BOUNDARY_CONDITION,XMIN,LBSBoundaryTypes.VACUUM);
+--chiLBSSetProperty(phys1,BOUNDARY_CONDITION,XMAX,LBSBoundaryTypes.VACUUM);
+--chiLBSSetProperty(phys1,BOUNDARY_CONDITION,YMIN,LBSBoundaryTypes.VACUUM);
+--chiLBSSetProperty(phys1,BOUNDARY_CONDITION,YMAX,LBSBoundaryTypes.VACUUM);
+
 
 chiLBSSetProperty(phys1,DISCRETIZATION_METHOD,PWLD)
 
