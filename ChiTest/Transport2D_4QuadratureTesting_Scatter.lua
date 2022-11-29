@@ -21,9 +21,9 @@ chiMeshHandlerCreate()
 
 nodes={}
 N=32
-ds=2.0/N
+ds=1.0/N
 for i=0,N do
-    nodes[i+1] = -1.0 + i*ds
+    nodes[i+1] = i*ds
 end
 surf_mesh,region1 = chiMeshCreateUnpartitioned2DOrthoMesh(nodes,nodes)
 
@@ -42,9 +42,13 @@ chiPhysicsMaterialAddProperty(materials[1],TRANSPORT_XSECTIONS)
 chiPhysicsMaterialAddProperty(materials[1],ISOTROPIC_MG_SOURCE)
 
 num_groups = 1
+xsection = {}
+for i=0,num_groups do
+    xsection[i] = 1.0
+end
 chiPhysicsMaterialSetProperty(materials[1],TRANSPORT_XSECTIONS,
         SIMPLEXS1,
-        num_groups,
+        1,
         1.0,   --Sigma_t
         0.5) --sigma_s fraction
 
@@ -52,7 +56,7 @@ src={}
 for g=1,num_groups do
     src[g] = 0.0
 end
-src[0] = 1.0/4.0/math.pi;
+--src[0] = 1.0/4.0/math.pi;
 
 chiPhysicsMaterialSetProperty(materials[1],ISOTROPIC_MG_SOURCE,FROM_ARRAY,src)
 
@@ -70,12 +74,13 @@ end
 chiLog(LOG_0,"Creating GLC quadratures")
 pquad = chiCreateProductQuadrature(GAUSS_LEGENDRE_CHEBYSHEV,2,2)
 chiLog(LOG_0,"Altering Quadrature")
-pquadOp = chiCreateProductQuadratureOperator(pquad,3,4,1)
+pquadOp = chiCreateProductQuadratureOperator(pquad,3,4,0)
 
 --========== Groupset def
 gs0 = chiLBSCreateGroupset(phys1)
 cur_gs = gs0
 chiLBSGroupsetAddGroups(phys1,cur_gs,0,num_groups-1)
+chiLBSAddPointSource(phys1,0.5,0.5,0.0,{1.0/4.0/math.pi})
 chiLBSGroupsetSetQuadrature(phys1,cur_gs,pquadOp)
 chiLBSGroupsetSetAngleAggregationType(phys1,cur_gs,LBSGroupset.ANGLE_AGG_SINGLE)
 chiLBSGroupsetSetAngleAggDiv(phys1,cur_gs,1)
@@ -152,10 +157,7 @@ chiLog(LOG_0,string.format("Max-value2=%.5e", maxval))
 chiPrintM2D(pquadOp);
 chiPrintD2M(pquadOp);
 --############################################### Exports
-
-if (master_export == nil) then
-    chiExportFieldFunctionToVTKG(fflist[1],"ZPhi3D","Phi")
-end
+chiExportFieldFunctionToVTKG(fflist[1],"Phi2D_Scatter","Phi")
 
 --############################################### Plots
 if (chi_location_id == 0 and master_export == nil) then
