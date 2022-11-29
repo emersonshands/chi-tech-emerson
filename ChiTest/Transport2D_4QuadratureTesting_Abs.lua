@@ -8,70 +8,53 @@ num_procs = 4
 
 
 --############################################### Check num_procs
-if (check_num_procs==nil and chi_number_of_processes ~= num_procs) then
-    chiLog(LOG_0ERROR,"Incorrect amount of processors. " ..
-            "Expected "..tostring(num_procs)..
-            ". Pass check_num_procs=false to override if possible.")
-    os.exit(false)
-end
+--if (check_num_procs==nil and chi_number_of_processes ~= num_procs) then
+--    chiLog(LOG_0ERROR,"Incorrect amount of processors. " ..
+--            "Expected "..tostring(num_procs)..
+--            ". Pass check_num_procs=false to override if possible.")
+--    os.exit(false)
+--end
 
 --############################################### Setup mesh
 chiMeshHandlerCreate()
 
-unpart_mesh = chiUnpartitionedMeshFromWavefrontOBJ(
-        "ChiResources/TestObjects/SquareMesh2x2Quads.obj",true)
 
-chiSurfaceMesherCreate(SURFACEMESHER_PREDEFINED);
-chiVolumeMesherCreate(VOLUMEMESHER_EXTRUDER,
-        ExtruderTemplateType.UNPARTITIONED_MESH,
-        unpart_mesh);
+nodes={}
+N=32
+ds=1.0/N
+for i=0,N do
+    nodes[i+1] = i*ds
+end
+surf_mesh,region1 = chiMeshCreateUnpartitioned2DOrthoMesh(nodes,nodes)
 
-NZ=2
-chiVolumeMesherSetProperty(EXTRUSION_LAYER,0.2*NZ,NZ,"Charlie");--0.4
-chiVolumeMesherSetProperty(EXTRUSION_LAYER,0.2*NZ,NZ,"Chuck");--0.8
-chiVolumeMesherSetProperty(EXTRUSION_LAYER,0.2*NZ,NZ,"Bob");--1.2
-chiVolumeMesherSetProperty(EXTRUSION_LAYER,0.2*NZ,NZ,"SarahConner");--1.6
-
-chiVolumeMesherSetProperty(PARTITION_TYPE,KBA_STYLE_XYZ)
-chiVolumeMesherSetKBAPartitioningPxPyPz(2,2,1)
-chiVolumeMesherSetKBACutsX({0.0})
-chiVolumeMesherSetKBACutsY({0.0})
-
-chiSurfaceMesherExecute();
 chiVolumeMesherExecute();
 
 --############################################### Set Material IDs
 vol0 = chiLogicalVolumeCreate(RPP,-1000,1000,-1000,1000,-1000,1000)
 chiVolumeMesherSetProperty(MATID_FROMLOGICAL,vol0,0)
 
-vol1 = chiLogicalVolumeCreate(RPP,-0.5,0.5,-0.5,0.5,-1000,1000)
-chiVolumeMesherSetProperty(MATID_FROMLOGICAL,vol1,1)
-
 --############################################### Add materials
 materials = {}
 materials[1] = chiPhysicsAddMaterial("Test Material");
-materials[2] = chiPhysicsAddMaterial("Test Material2");
 
 chiPhysicsMaterialAddProperty(materials[1],TRANSPORT_XSECTIONS)
-chiPhysicsMaterialAddProperty(materials[2],TRANSPORT_XSECTIONS)
 
 chiPhysicsMaterialAddProperty(materials[1],ISOTROPIC_MG_SOURCE)
-chiPhysicsMaterialAddProperty(materials[2],ISOTROPIC_MG_SOURCE)
 
-
-num_groups = 21
+num_groups = 1
 chiPhysicsMaterialSetProperty(materials[1],TRANSPORT_XSECTIONS,
-        CHI_XSFILE,"ChiTest/xs_graphite_pure.cxs")
-chiPhysicsMaterialSetProperty(materials[2],TRANSPORT_XSECTIONS,
-        CHI_XSFILE,"ChiTest/xs_graphite_pure.cxs")
+        SIMPLEXS1,
+        num_groups,
+        1.0,   --Sigma_t
+        0.0) --sigma_s fraction
 
 src={}
 for g=1,num_groups do
     src[g] = 0.0
 end
+src[0] = 1.0/4.0/math.pi;
 
 chiPhysicsMaterialSetProperty(materials[1],ISOTROPIC_MG_SOURCE,FROM_ARRAY,src)
-chiPhysicsMaterialSetProperty(materials[2],ISOTROPIC_MG_SOURCE,FROM_ARRAY,src)
 
 --############################################### Setup Physics
 
@@ -84,19 +67,21 @@ for g=1,num_groups do
 end
 
 --========== ProdQuad
-chiLog(LOG_0,"Creating quadratures")
-pquad = chiCreateAngularQuadratureTriangle(2,1)
-pquad2 = chiCreateAngularQuadratureTriangle(4,1)
+chiLog(LOG_0,"Creating GLC quadratures")
+pquadOp = chiCreateProductQuadrature(GAUSS_LEGENDRE_CHEBYSHEV,2,2)
+chiLog(LOG_0,"Altering Quadrature")
+--pquadOp = chiCreateProductQuadratureOperator(pquad,3,4,0)
 
 --========== Groupset def
 gs0 = chiLBSCreateGroupset(phys1)
 cur_gs = gs0
-chiLBSGroupsetAddGroups(phys1,cur_gs,0,20)
-chiLBSGroupsetSetQuadrature(phys1,cur_gs,pquad)
+chiLBSGroupsetAddGroups(phys1,cur_gs,0,num_groups-1)
+chiLBSGroupsetSetQuadrature(phys1,cur_gs,pquadOp)
+chiLBSAddPointSource(phys1,0.5,0.5,0.0,{1.0/4.0/math.pi})
 chiLBSGroupsetSetAngleAggregationType(phys1,cur_gs,LBSGroupset.ANGLE_AGG_SINGLE)
 chiLBSGroupsetSetAngleAggDiv(phys1,cur_gs,1)
 chiLBSGroupsetSetGroupSubsets(phys1,cur_gs,1)
-chiLBSGroupsetSetIterativeMethod(phys1,cur_gs,NPT_GMRES)
+chiLBSGroupsetSetIterativeMethod(phys1,cur_gs,NPT_GMRES_CYCLES)
 chiLBSGroupsetSetResidualTolerance(phys1,cur_gs,1.0e-6)
 if (master_export == nil) then
     --chiLBSGroupsetSetEnableSweepLog(phys1,cur_gs,true)
@@ -109,8 +94,13 @@ bsrc={}
 for g=1,num_groups do
     bsrc[g] = 0.0
 end
-bsrc[1] = 1.0/4.0/math.pi;
-chiLBSSetProperty(phys1,BOUNDARY_CONDITION,ZMIN,LBSBoundaryTypes.INCIDENT_ISOTROPIC,bsrc);
+--chiLBSSetProperty(phys1,BOUNDARY_CONDITION,ZMIN,LBSBoundaryTypes.VACUUM);
+--chiLBSSetProperty(phys1,BOUNDARY_CONDITION,ZMAX,LBSBoundaryTypes.VACUUM);
+--chiLBSSetProperty(phys1,BOUNDARY_CONDITION,XMIN,LBSBoundaryTypes.VACUUM);
+--chiLBSSetProperty(phys1,BOUNDARY_CONDITION,XMAX,LBSBoundaryTypes.VACUUM);
+--chiLBSSetProperty(phys1,BOUNDARY_CONDITION,YMIN,LBSBoundaryTypes.VACUUM);
+--chiLBSSetProperty(phys1,BOUNDARY_CONDITION,YMAX,LBSBoundaryTypes.VACUUM);
+
 
 chiLBSSetProperty(phys1,DISCRETIZATION_METHOD,PWLD)
 
@@ -160,13 +150,12 @@ maxval = chiFFInterpolationGetValue(curffi)
 chiLog(LOG_0,string.format("Max-value2=%.5e", maxval))
 
 --############################################### Quadrature print
-chiPrintM2D(pquad);
-chiPrintD2M(pquad);
+chiPrintM2D(pquadOp);
+chiPrintD2M(pquadOp);
 --############################################### Exports
 
-if (master_export == nil) then
-    chiExportFieldFunctionToVTKG(fflist[1],"ZPhi3D","Phi")
-end
+chiExportFieldFunctionToVTKG(fflist[1],"Phi2D_Absorb","Phi")
+
 
 --############################################### Plots
 if (chi_location_id == 0 and master_export == nil) then
