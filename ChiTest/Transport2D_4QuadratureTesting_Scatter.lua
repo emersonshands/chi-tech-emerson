@@ -72,9 +72,9 @@ end
 
 --========== ProdQuad
 chiLog(LOG_0,"Creating GLC quadratures")
-pquad = chiCreateProductQuadrature(GAUSS_LEGENDRE_CHEBYSHEV,2,2)
+pquad = chiCreateProductQuadrature(GAUSS_LEGENDRE_CHEBYSHEV,1,1)
 chiLog(LOG_0,"Altering Quadrature")
-pquadOp = chiCreateProductQuadratureOperator(pquad,3,4,0)
+pquadOp = chiCreateProductQuadratureOperator(pquad,3,2,1)
 
 --========== Groupset def
 gs0 = chiLBSCreateGroupset(phys1)

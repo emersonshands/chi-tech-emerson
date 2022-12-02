@@ -56,7 +56,7 @@ void chi_math::ProductQuadratureOp::CheckInputs()
     chi::log.Log0Error() << "Mismatch between given moments to cut and sn used";
     chi::Exit(510);
   }
-  OptimizeForPolarSymmetry(4.0*M_PI);
+//  OptimizeForPolarSymmetry(4.0*M_PI);
 }
 
 void chi_math::ProductQuadratureOp::

@@ -123,5 +123,5 @@ TriangleInit(unsigned int sn)
   }
   //Now we need to call optimize for polar symmetry to normalize
   // the weights to 4pi to correctly integrate over the sphere
-  chi_math::AngularQuadrature::OptimizeForPolarSymmetry(4.0*M_PI);
+//  chi_math::AngularQuadrature::OptimizeForPolarSymmetry(4.0*M_PI);
 }
