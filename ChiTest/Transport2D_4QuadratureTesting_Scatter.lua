@@ -74,7 +74,8 @@ end
 chiLog(LOG_0,"Creating GLC quadratures")
 pquad = chiCreateProductQuadrature(GAUSS_LEGENDRE_CHEBYSHEV,1,1)
 chiLog(LOG_0,"Altering Quadrature")
-pquadOp = chiCreateProductQuadratureOperator(pquad,3,2,1)
+-- pquadOp2 = chiCreateProductQuadratureOperator(pquad,3,2,1)
+pquadOp = chiCreateAngularQuadratureTriangle(3,2,1)
 
 --========== Groupset def
 gs0 = chiLBSCreateGroupset(phys1)
@@ -154,8 +155,8 @@ maxval = chiFFInterpolationGetValue(curffi)
 chiLog(LOG_0,string.format("Max-value2=%.5e", maxval))
 
 --############################################### Quadrature print
-chiPrintM2D(pquadOp);
-chiPrintD2M(pquadOp);
+--chiPrintM2D(pquadOp);
+--chiPrintD2M(pquadOp);
 --############################################### Exports
 chiExportFieldFunctionToVTKG(fflist[1],"Phi2D_Scatter","Phi")
 
