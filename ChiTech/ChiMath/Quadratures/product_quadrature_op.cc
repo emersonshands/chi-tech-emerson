@@ -2,6 +2,7 @@
 #include <cassert>
 #include "chi_runtime.h"
 #include "chi_log.h"
+#include "algorithm"
 
 chi_math::ProductQuadratureOp::ProductQuadratureOp(const
 chi_math::ProductQuadrature&
@@ -56,7 +57,7 @@ void chi_math::ProductQuadratureOp::CheckInputs()
     chi::log.Log0Error() << "Mismatch between given moments to cut and sn used";
     chi::Exit(510);
   }
-//  OptimizeForPolarSymmetry(4.0*M_PI);
+  OptimizeForPolarSymmetry(4.0*M_PI);
 }
 
 void chi_math::ProductQuadratureOp::
@@ -106,6 +107,74 @@ OptimizeForPolarSymmetry(const double normalization)
   azimu_ang = new_azimu_ang;
 }
 
+void chi_math::ProductQuadratureOp::AxisShift()
+{
+  if (d2m_op_built and m2d_op_built)
+  {
+    std::vector<chi_math::QuadraturePointPhiTheta> new_abscissae;
+    std::vector<double> new_weights;
+    std::vector<chi_mesh::Vector3> new_omegas;
+    std::vector<double> new_polar_ang;
+    std::vector<double> new_azimu_ang;
+
+    const size_t num_pol = polar_ang.size();
+    const size_t num_azi = azimu_ang.size();
+
+    //Grab all old angles
+    std::vector<unsigned int> new_azimu_map;
+    VecDbl old_polar_ang = polar_ang;
+    VecDbl old_azimu_ang = azimu_ang;
+    polar_ang.clear();
+    azimu_ang.clear();
+    VecDbl mu;
+    VecDbl eta;
+    VecDbl zi;
+    //Find mu, eta, zi
+    for (size_t a = 0; a < num_pol; ++a)
+    {
+      for (size_t b = 0; b < num_azi; ++b)
+      {
+        double zi_old = cos(old_polar_ang[a]);
+        double eta_old = sqrt(1 - pow(zi_old, 2)) * sin(old_azimu_ang[b]);
+        double zi_new = eta_old;
+        double eta_new = -zi_old;
+        double new_azimu = asin(eta_new / sqrt(1.0 - pow(zi_new, 2)));
+        double new_polar = acos(eta_old);
+        if (cos(old_azimu_ang[b]) > 0.0 and new_azimu < 0.0)
+          new_azimu = 2.0 * M_PI - new_azimu;
+        if (cos(old_azimu_ang[b]) < 0.0)
+          new_azimu = M_PI - new_azimu;
+        new_azimu_ang.push_back(new_azimu);
+        if (std::count(new_polar_ang.begin(), new_polar_ang.end(), new_polar))
+          new_polar_ang.push_back(new_polar);
+      }
+//    }
+//    for (size_t a = 0; a<num_azi; ++a)
+//    {
+//      if (azimu_ang[a]<M_PI)
+//      {
+//        new_azimu_ang.push_back(azimu_ang[a]);
+//        new_azimu_map.push_back(a);
+//      }
+//    }
+//
+//    const size_t new_num_azimu = new_azimu_ang.size();
+//    double weight_sum = 0.0;
+//    for (size_t a=0; a<new_num_azimu; ++a)
+//      for (size_t p=0; p<num_pol; ++p)
+//      {
+//        const auto amap = new_azimu_map[a];
+//        const auto dmap = GetAngleNum(p,amap);
+//        new_weights.push_back(weights[dmap]);
+//        weight_sum += weights[dmap];
+//      }
+//    chi_math::ProductQuadrature::AssembleCosines(new_azimu_ang,
+//                                                 new_polar_ang,new_weights,false);
+//    polar_ang = new_polar_ang;
+//    azimu_ang = new_azimu_ang;
+    }
+  }
+}
 
 void chi_math::ProductQuadratureOp::FilterMoments()
 {
@@ -226,7 +295,9 @@ void chi_math::ProductQuadratureOp::BuildDiscreteToMomentOperator
   else if(not d2m_op_built and method ==3)
   {
     d2m_op.clear();
-    unsigned int num_angles = abscissae.size();
+    printf("the weights\n");
+    chi_math::PrintVector(weights);
+    unsigned int num_angles = weights.size();
     if (moments!=0 and moments!=sn)
       unsigned int num_moms = 1 + (moments*3 + moments*moments)/2;
     else
@@ -245,6 +316,7 @@ void chi_math::ProductQuadratureOp::BuildDiscreteToMomentOperator
                                     cur_angle.phi,
                                     cur_angle.theta);
         double w = weights[n];
+        printf("Weights %0.4f and points %0.4f \n",w,value);
         cur_mom.push_back(value*w);
       }
       cmt.push_back(cur_mom);
@@ -252,7 +324,8 @@ void chi_math::ProductQuadratureOp::BuildDiscreteToMomentOperator
     //Make the holder for the altered coefficients
     MatDbl cmt_hat=cmt;
     size_t ndir = cmt[0].size();
-    for (size_t i = 1;i<ndir;++i)
+    size_t nmom = cmt.size();
+    for (size_t i = 1;i<nmom;++i)
     {
       VecDbl current_vec = cmt[i];
       VecDbl sum_val(ndir);
@@ -298,8 +371,15 @@ void chi_math::ProductQuadratureOp::BuildDiscreteToMomentOperator
     m2d_op = chi_math::Transpose(holder_m2d);
     d2m_op_built = true;
   }
-  if(moments!=0 and d2m_op_built and m2d_op_built and moments!=sn and method!=3)
+
+  bool check = false;
+  if(moments!=0 and
+  (d2m_op_built and m2d_op_built) and
+  (moments!=sn and method!=3))
+  {
+    check = true;
     FilterMoments();
+  }
 }
 
 void chi_math::ProductQuadratureOp::BuildMomentToDiscreteOperator
@@ -316,6 +396,7 @@ void chi_math::ProductQuadratureOp::BuildMomentToDiscreteOperator
   //Now filter by the moment number given
   if(moments!=0 and d2m_op_built and m2d_op_built and moments!=sn)
     FilterMoments();
+  AxisShift();
 }
 
 

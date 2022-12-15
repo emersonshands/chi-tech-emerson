@@ -31,6 +31,7 @@ public:
   void BuildMomentToDiscreteOperator();
   // Had to match up to dr. morel's symmetry;
   void OptimizeForPolarSymmetry(double normalization) override;
+  void AxisShift();
   void FilterMoments();
 };
 #endif //CHITECHMATRIXWORK_PRODUCT_QUADRATURE_OP_H
