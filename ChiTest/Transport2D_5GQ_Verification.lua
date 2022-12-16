@@ -71,6 +71,8 @@ chiLBSGroupsetSetMaxIterations(phys1,cur_gs,300)
 chiLBSGroupsetSetGMRESRestartIntvl(phys1,cur_gs,100)
 
 --############################################### Set boundary conditions
+
+--This needs to be a "unit incident half-range current"
 bsrc={}
 for g=1,num_groups do
     bsrc[g] = 1.0;
