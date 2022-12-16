@@ -25,7 +25,7 @@ chiVolumeMesherExecute();
 --############################################### Set Material IDs
 vol0 = chiLogicalVolumeCreate(RPP,-1000E6,1000E6,-1000E6,1000E6,-1000E6,1000E6)
 --Get the right side volume
-vol1 = chiLogicalVolumeCreate(RPP,lent-0.00001,lent,0,lent,-1000E6,1000E6)
+vol1 = chiLogicalVolumeCreate(RPP,lent-ds,lent,0,lent,-1000E6,1000E6)
 --Get the top side volume
 vol2 = chiLogicalVolumeCreate(RPP,0,lent,lent-ds,lent,-1000E6,1000E6)
 --Get the bottom volume
@@ -67,9 +67,6 @@ chiLBSGroupsetSetAngleAggDiv(phys1,cur_gs,1)
 chiLBSGroupsetSetGroupSubsets(phys1,cur_gs,1)
 chiLBSGroupsetSetIterativeMethod(phys1,cur_gs,NPT_GMRES_CYCLES)
 chiLBSGroupsetSetResidualTolerance(phys1,cur_gs,1.0e-6)
-if (master_export == nil) then
-    --chiLBSGroupsetSetEnableSweepLog(phys1,cur_gs,true)
-end
 chiLBSGroupsetSetMaxIterations(phys1,cur_gs,300)
 chiLBSGroupsetSetGMRESRestartIntvl(phys1,cur_gs,100)
 
@@ -78,12 +75,7 @@ bsrc={}
 for g=1,num_groups do
     bsrc[g] = 1.0;
 end
---chiLBSSetProperty(phys1,BOUNDARY_CONDITION,ZMIN,LBSBoundaryTypes.INCIDENT_ISOTROPIC,bsrc);
---chiLBSSetProperty(phys1,BOUNDARY_CONDITION,ZMAX,LBSBoundaryTypes.INCIDENT_ISOTROPIC,bsrc);
 chiLBSSetProperty(phys1,BOUNDARY_CONDITION,XMIN,LBSBoundaryTypes.INCIDENT_ISOTROPIC,bsrc);
---chiLBSSetProperty(phys1,BOUNDARY_CONDITION,XMAX,LBSBoundaryTypes.INCIDENT_ISOTROPIC,bsrc);
---chiLBSSetProperty(phys1,BOUNDARY_CONDITION,YMIN,LBSBoundaryTypes.INCIDENT_ISOTROPIC,bsrc);
---chiLBSSetProperty(phys1,BOUNDARY_CONDITION,YMAX,LBSBoundaryTypes.INCIDENT_ISOTROPIC,bsrc);
 
 
 chiLBSSetProperty(phys1,DISCRETIZATION_METHOD,PWLD)
@@ -98,32 +90,31 @@ fflist,count = chiLBSGetScalarFieldFunctionList(phys1)
 --############################################### Volume integrations
 ffi1 = chiFFInterpolationCreate(VOLUME)
 curffi = ffi1
-chiFFInterpolationSetProperty(curffi,ADD_FIELDFUNCTION,fflist[k])
 
-chiFFInterpolationSetProperty(curffi,LINE_FIRSTPOINT,lent,lent,0)
-chiFFInterpolationSetProperty(curffi,LINE_SECONDPOINT,lent,0,0)
-chiFFInterpolationSetProperty(curffi,LINE_NUMBEROFPOINTS,65)
+--chiFFInterpolationSetProperty(curffi,ADD_FIELDFUNCTION,fflist[1])
+--
+--chiFFInterpolationSetProperty(curffi,LINE_FIRSTPOINT,lent,lent,0)
+--chiFFInterpolationSetProperty(curffi,LINE_SECONDPOINT,lent,0,0)
+--chiFFInterpolationSetProperty(curffi,LINE_NUMBEROFPOINTS,65)
+--chiFFInterpolationSetProperty(curffi,LOGICAL_VOLUME,vol1)
+--
+
+chiFFInterpolationSetProperty(curffi,OPERATION,OP_SUM)
 chiFFInterpolationSetProperty(curffi,LOGICAL_VOLUME,vol1)
+chiFFInterpolationSetProperty(curffi,ADD_FIELDFUNCTION,fflist[1])
+
 
 chiFFInterpolationInitialize(curffi)
 chiFFInterpolationExecute(curffi)
 RightSideSum = chiFFInterpolationGetValue(curffi)
 
 chiLog(LOG_0,string.format("RightSum=%.5e", RightSideSum))
-
-
+--Desired value for this right side sum is [0.0199, 0.0182]
+--This gets 0.0801 currently doing the volume integration
+--A way to get the boundary leakage needs to be found.
 
 --############################################### Exports
 
 chiExportFieldFunctionToVTKG(fflist[1],"Phi2D_GQ","Phi")
 
-
---############################################### Plots
-if (chi_location_id == 0 and master_export == nil) then
-
-    --os.execute("python ZPFFI00.py")
-    ----os.execute("python ZPFFI11.py")
-    --local handle = io.popen("python ZPFFI00.py")
-    print("Execution completed")
-end
 
