@@ -65,7 +65,7 @@ int chiLBSGetScalarFieldFunctionList(lua_State *L)
   const std::string fname = __FUNCTION__;
   //============================================= Get pointer to solver
   const int solver_index = lua_tonumber(L,1);
-  auto& lbs_solver = lbs::lua_utils::GetSolverByHandle(solver_index, "chiLBSGetScalarFieldFunctionList");
+  auto& lbs_solver = lbs::lua_utils::GetSolverByHandle(solver_index, fname);
 
   //============================================= Push up new table
   lua_newtable(L);

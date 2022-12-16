@@ -20,9 +20,9 @@ protected:
   const unsigned int moments;
 public:
   explicit
-  AngularQuadratureTriangle(unsigned int sn, unsigned int in_method);
+  AngularQuadratureTriangle(unsigned int in_method,unsigned int sn);
   explicit
-  AngularQuadratureTriangle(unsigned int sn, unsigned int in_method,
+  AngularQuadratureTriangle(unsigned int in_method,unsigned int sn,
                             unsigned int inmoments);
 protected:
   void TriangleInit(unsigned int sn);

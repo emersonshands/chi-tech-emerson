@@ -45,6 +45,13 @@ MakeHarmonicIndices(unsigned int l_max)
 void chi_math::AngularQuadratureTriangle::
 TriangleInit(unsigned int sn)
 {
+  if (method != 1 and method != 2 and method !=3)
+  {
+    printf("The method given is not 1, 2, or 3.\n Please reorder your input.\n "
+           "Given value %i\n",method);
+    chi::log.Log0Error() << "Mismatch in method given";
+    chi::Exit(510);
+  }
   if (moments<0 or moments>sn)
   {
     printf("The moments user is asking for is greater than or less "

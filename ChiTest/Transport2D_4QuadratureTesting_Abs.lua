@@ -32,27 +32,38 @@ chiVolumeMesherExecute();
 
 --############################################### Set Material IDs
 vol0 = chiLogicalVolumeCreate(RPP,-1000E6,1000E6,-1000E6,1000E6,-1000E6,1000E6)
+vol9 = chiLogicalVolumeCreate(RPP,lent/2.0-5.0*ds,lent/2.0+5.0*ds,lent/2.0-5.0*ds,lent/2.0+5.0*ds,
+        -1000E6,1000E6)
 vol1 = chiLogicalVolumeCreate(RPP,lent/4.0,lent*3.0/4.0,lent/4.0,lent*3.0/4.0,-1000E6,1000E6)
+--vol2 = chiLogicalVolumeCreate(RPP,lent/4.0,lent*3.0/4.0,lent/4.0,lent*3.0/4.0,-1000E6,1000E6)
+--vol3 = chiLogicalVolumeCreate(RPP,lent/4.0,lent*3.0/4.0,lent/4.0,lent*3.0/4.0,-1000E6,1000E6)
+--vol1 = chiLogicalVolumeCreate(RPP,lent/4.0,lent*3.0/4.0,lent/4.0,lent*3.0/4.0,-1000E6,1000E6)
 chiVolumeMesherSetProperty(MATID_FROMLOGICAL,vol0,0)
+chiVolumeMesherSetProperty(MATID_FROMLOGICAL,vol9,0)
 
 --############################################### Add materials
 materials = {}
 materials[1] = chiPhysicsAddMaterial("Test Material");
+materials[2] = chiPhysicsAddMaterial("Source");
 
 chiPhysicsMaterialAddProperty(materials[1],TRANSPORT_XSECTIONS)
+chiPhysicsMaterialAddProperty(materials[2],TRANSPORT_XSECTIONS)
 
 chiPhysicsMaterialAddProperty(materials[1],ISOTROPIC_MG_SOURCE)
 
 num_groups = 1
 chiPhysicsMaterialSetProperty(materials[1],TRANSPORT_XSECTIONS,
         CHI_XSFILE,"ChiTest/xs_quad_test_abs.cxs")
+chiPhysicsMaterialSetProperty(materials[2],TRANSPORT_XSECTIONS,
+        CHI_XSFILE,"ChiTest/xs_quad_test_abs.cxs")
+
 
 src={}
 for g=1,num_groups do
     src[g] = 0.0
 end
 src[1] = 1.0
-
+--
 chiPhysicsMaterialSetProperty(materials[1],ISOTROPIC_MG_SOURCE,FROM_ARRAY,src)
 
 --############################################### Setup Physics
@@ -70,14 +81,14 @@ end
 --pquadOp = chiCreateProductQuadrature(GAUSS_LEGENDRE_CHEBYSHEV,2,2)
 --chiLog(LOG_0,"Altering Quadrature")
 --pquadOp = chiCreateProductQuadratureOperator(pquad,3,4,0)
-pquadOp = chiCreateAngularQuadratureTriangle(8,3)
-
+--pquadOp = chiCreateAngularQuadratureTriangle(4,3)
+pquadOp = chiCreateProductQuadrature(GAUSS_LEGENDRE_CHEBYSHEV,2,2)
 --========== Groupset def
 gs0 = chiLBSCreateGroupset(phys1)
 cur_gs = gs0
 chiLBSGroupsetAddGroups(phys1,cur_gs,0,num_groups-1)
 chiLBSGroupsetSetQuadrature(phys1,cur_gs,pquadOp)
---chiLBSAddPointSource(phys1,lent/2.0,lent/2.0,0.0,{1.0/4.0/math.pi})
+--chiLBSAddPointSource(phys1,lent/2.0,lent/2.0,0.0,{10.0})
 chiLBSGroupsetSetAngleAggregationType(phys1,cur_gs,LBSGroupset.ANGLE_AGG_SINGLE)
 chiLBSGroupsetSetAngleAggDiv(phys1,cur_gs,1)
 chiLBSGroupsetSetGroupSubsets(phys1,cur_gs,1)
@@ -92,7 +103,7 @@ chiLBSGroupsetSetGMRESRestartIntvl(phys1,cur_gs,100)
 --############################################### Set boundary conditions
 bsrc={}
 for g=1,num_groups do
-    bsrc[g] = 1.0/4.0/math.pi;
+    bsrc[g] = 1.0;
 end
 --chiLBSSetProperty(phys1,BOUNDARY_CONDITION,ZMIN,LBSBoundaryTypes.INCIDENT_ISOTROPIC,bsrc);
 --chiLBSSetProperty(phys1,BOUNDARY_CONDITION,ZMAX,LBSBoundaryTypes.INCIDENT_ISOTROPIC,bsrc);
@@ -128,8 +139,8 @@ end
 ffi1 = chiFFInterpolationCreate(VOLUME)
 curffi = ffi1
 chiFFInterpolationSetProperty(curffi,OPERATION,OP_MAX)
-chiFFInterpolationSetProperty(curffi,LOGICAL_VOLUME,vol1)
-chiFFInterpolationSetProperty(curffi,ADD_FIELDFUNCTION,fflist[1])
+chiFFInterpolationSetProperty(curffi,LOGICAL_VOLUME,vol9)
+chiFFInterpolationSetProperty(curffi,ADD_FIELDFUNCTION,fflist[20])
 
 chiFFInterpolationInitialize(curffi)
 chiFFInterpolationExecute(curffi)
@@ -148,6 +159,19 @@ chiFFInterpolationExecute(curffi)
 maxval = chiFFInterpolationGetValue(curffi)
 
 chiLog(LOG_0,string.format("Max-value2=%.5e", maxval))
+
+ffi1 = chiFFInterpolationCreate(VOLUME)
+curffi = ffi1
+chiFFInterpolationSetProperty(curffi,OPERATION,OP_MAX)
+chiFFInterpolationSetProperty(curffi,LOGICAL_VOLUME,vol1)
+chiFFInterpolationSetProperty(curffi,ADD_FIELDFUNCTION,fflist[20])
+
+chiFFInterpolationInitialize(curffi)
+chiFFInterpolationExecute(curffi)
+maxval = chiFFInterpolationGetValue(curffi)
+
+chiLog(LOG_0,string.format("Max-value3=%.5e", maxval))
+
 
 --############################################### Quadrature print
 --chiPrintM2D(pquadOp);
