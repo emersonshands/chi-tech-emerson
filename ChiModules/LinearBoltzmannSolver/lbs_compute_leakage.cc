@@ -32,7 +32,7 @@ std::vector<double> lbs::SteadySolver::
   const int gs_num_groups = gsf+1-gsi;
 
   //================================================== Start integration
-  std::vector<double> leakage(gs_num_groups, 0.0);
+  std::vector<double> local_leakage(gs_num_groups, 0.0);
   for (const auto& cell : grid->local_cells)
   {
     const auto& cell_mapping = sdm.GetCellMapping(cell);
@@ -62,7 +62,7 @@ std::vector<double> lbs::SteadySolver::
 
                 const double psi = psi_new_local[groupset_id][imap];
 
-                leakage[gi] += weight * mu * psi * IntF_shapeI[i];
+                local_leakage[gi] += weight * mu * psi * IntF_shapeI[i];
               }//for g
             }//outgoing
           }//for n
@@ -72,5 +72,12 @@ std::vector<double> lbs::SteadySolver::
     }//for face
   }//for cell
 
-  return leakage;
+  std::vector<double> global_leakage(gs_num_groups, 0.0);
+  MPI_Allreduce(local_leakage.data(),      //sendbuf
+                global_leakage.data(),     //recvbuf,
+                gs_num_groups, MPI_DOUBLE, //count+datatype
+                MPI_SUM,                   //operation
+                MPI_COMM_WORLD);           //comm
+
+  return global_leakage;
 }

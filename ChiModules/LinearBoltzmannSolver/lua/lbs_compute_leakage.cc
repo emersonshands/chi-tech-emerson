@@ -44,9 +44,7 @@ int chiLBSComputeLeakage(lua_State *L)
     lua_pushinteger(L, i+1);
     lua_pushnumber(L, leakage[i]);
     lua_settable(L, -3);
-    std::cout << leakage[i] << " ";
   }
-  std::cout << "\n";
 
   return 1;
 }
