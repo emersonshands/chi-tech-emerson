@@ -65,6 +65,10 @@ READ_RESTART_DATA\n
  absolute, and the second is the file base name. These are defaulted to
  "YRestart" and "restart" respectively.\n\n
 
+SAVE_ANGULAR_FLUX\n
+Sets the flag for saving the angular flux. Expects to be followed by true/false.
+[Default=false]\n\n 
+
 USE_SOURCE_MOMENTS\n
  Flag for using a vector of source moments instead the regular material/boundary
   source. Default false. This expects

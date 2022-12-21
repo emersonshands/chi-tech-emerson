@@ -19,6 +19,7 @@ int chiLBSReadFluxMoments(lua_State *L);
 int chiLBSComputeBalance(lua_State *L);
 int chiLBSComputeFissionRate(lua_State *L);
 int chiLBSInitializeMaterials(lua_State* L);
+int chiLBSComputeLeakage(lua_State* L);
 
 int chiLBSCreateGroupset(lua_State *L);
 int chiLBSCreateGroup(lua_State *L);

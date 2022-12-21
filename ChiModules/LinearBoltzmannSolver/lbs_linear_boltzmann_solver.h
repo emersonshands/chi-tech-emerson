@@ -239,6 +239,10 @@ protected:
 
   //precursors
   void ComputePrecursors();
+
+  //compute_leakage
+  std::vector<double> ComputeLeakage(int groupset_id,
+                        uint64_t boundary_id) const;
 };
 
 }

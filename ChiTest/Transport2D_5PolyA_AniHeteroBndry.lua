@@ -41,7 +41,7 @@ chiPhysicsMaterialAddProperty(materials[1],TRANSPORT_XSECTIONS)
 chiPhysicsMaterialAddProperty(materials[1],ISOTROPIC_MG_SOURCE)
 
 
-num_groups = 1
+num_groups = 10
 chiPhysicsMaterialSetProperty(materials[1],TRANSPORT_XSECTIONS,
         CHI_XSFILE,"ChiTest/xs_air50RH.cxs")
 
@@ -68,7 +68,7 @@ chiOptimizeAngularQuadratureForPolarSymmetry(pqaud, 4.0*math.pi)
 --========== Groupset def
 gs0 = chiLBSCreateGroupset(phys1)
 cur_gs = gs0
-chiLBSGroupsetAddGroups(phys1,cur_gs,0,0)
+chiLBSGroupsetAddGroups(phys1,cur_gs,0,9)
 chiLBSGroupsetSetQuadrature(phys1,cur_gs,pquad)
 chiLBSGroupsetSetAngleAggDiv(phys1,cur_gs,1)
 chiLBSGroupsetSetGroupSubsets(phys1,cur_gs,2)
@@ -138,14 +138,15 @@ for g=1,num_groups do
     bsrc[g] = 0.0
 end
 bsrc[1] = 1.0
---chiLBSSetProperty(phys1,BOUNDARY_CONDITION,XMIN,
---        LBSBoundaryTypes.INCIDENT_ISOTROPIC, bsrc);
 chiLBSSetProperty(phys1,BOUNDARY_CONDITION,XMIN,
-                        LBSBoundaryTypes.INCIDENT_ANISTROPIC_HETEROGENOUS,
-                        "luaBoundaryFunctionA");
+        LBSBoundaryTypes.INCIDENT_ISOTROPIC, bsrc);
+--chiLBSSetProperty(phys1,BOUNDARY_CONDITION,XMIN,
+--                        LBSBoundaryTypes.INCIDENT_ANISTROPIC_HETEROGENOUS,
+--                        "luaBoundaryFunctionA");
 
 chiLBSSetProperty(phys1,DISCRETIZATION_METHOD,PWLD)
 chiLBSSetProperty(phys1,SCATTERING_ORDER,1)
+chiLBSSetProperty(phys1,SAVE_ANGULAR_FLUX,true)
 
 --############################################### Initialize and Execute Solver
 chiSolverInitialize(phys1)
@@ -193,7 +194,18 @@ if master_export == nil then
     chiFFInterpolationExportPython(slice2)
 end
 
+leakage0 = chiLBSComputeLeakage(phys1, gs0, 0)
+leakage1 = chiLBSComputeLeakage(phys1, gs0, 1)
+leakage2 = chiLBSComputeLeakage(phys1, gs0, 2)
+leakage3 = chiLBSComputeLeakage(phys1, gs0, 3)
+
+chiLog(LOG_0,tostring(leakage0[1]))
+chiLog(LOG_0,tostring(leakage1[1]))
+chiLog(LOG_0,tostring(leakage2[1]))
+chiLog(LOG_0,tostring(leakage3[1]))
+
 --############################################### Plots
 if (chi_location_id == 0 and master_export == nil) then
     local handle = io.popen("python ZPFFI00.py")
 end
+

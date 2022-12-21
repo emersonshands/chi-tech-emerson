@@ -25,8 +25,7 @@ double* chi_mesh::sweep_management::BoundaryIncidentHeterogenous::
 
   const size_t dof_offset = num_groups*angle_num + group_num;
 
-//  return &local_cell_data[cell_local_id][face_num][fi][dof_offset];
-  return &local_cell_data.at(cell_local_id).at(face_num).at(fi).at(dof_offset);
+  return &local_cell_data[cell_local_id][face_num][fi][dof_offset];
 }
 
 //###################################################################

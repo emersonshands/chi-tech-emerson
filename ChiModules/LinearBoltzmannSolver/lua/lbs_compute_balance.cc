@@ -2,9 +2,9 @@
 #include "lbs_lua_utils.h"
 
 //###################################################################
-/**Obtains a list of field functions from the transport solver.
+/**Computes and prints the balance tables.
  *
-\param SolverIndex int Handle to the solver for which the list is to be obtained.
+\param SolverIndex int Handle to the solver.
 
 \ingroup LuaLBS
 \author Jan*/

@@ -111,6 +111,7 @@ void lbs::lua_utils::RegisterLuaEntities(lua_State *L)
   LUA_FMACRO1(chiLBSComputeBalance);
   LUA_FMACRO1(chiLBSComputeFissionRate);
   LUA_FMACRO1(chiLBSInitializeMaterials);
+  LUA_FMACRO1(chiLBSComputeLeakage);
 
   //=================================== Groupset manipulation
   LUA_CTABLE1(LBSGroupset);
