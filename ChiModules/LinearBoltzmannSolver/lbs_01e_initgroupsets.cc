@@ -9,12 +9,12 @@ void lbs::SteadySolver::InitializeGroupsets()
     //================================================== Build groupset angular
     //                                                   flux unknown manager
     groupset.psi_uk_man.unknowns.clear();
-    size_t num_angles = groupset.quadrature->abscissae.size();
-    size_t num_groups = groupset.groups.size();
+    const size_t gs_num_angles = groupset.quadrature->abscissae.size();
+    const size_t gs_num_groups = groupset.groups.size();
     auto& grpset_psi_uk_man = groupset.psi_uk_man;
 
-    for (unsigned int n=0; n<num_angles; ++n)
-      grpset_psi_uk_man.AddUnknown(chi_math::UnknownType::VECTOR_N, num_groups);
+    for (unsigned int n=0; n<gs_num_angles; ++n)
+      grpset_psi_uk_man.AddUnknown(chi_math::UnknownType::VECTOR_N, gs_num_groups);
 
     groupset.BuildDiscMomOperator(options.scattering_order,
                                   options.geometry_type);

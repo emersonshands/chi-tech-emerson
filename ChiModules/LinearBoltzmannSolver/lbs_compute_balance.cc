@@ -6,8 +6,6 @@
 #include "chi_log.h"
 #include "Groupset/lbs_groupset.h"
 
-;
-
 #include <iomanip>
 
 //###################################################################
@@ -42,8 +40,8 @@ void lbs::SteadySolver::ComputeBalance()
   {
     q_moments_local.assign(q_moments_local.size(), 0.0);
     SetSource(groupset, q_moments_local,
-              APPLY_MATERIAL_SOURCE | APPLY_AGS_FISSION_SOURCE |
-              APPLY_WGS_FISSION_SOURCE);
+              APPLY_FIXED_SOURCES | APPLY_AGS_FISSION_SOURCES |
+              APPLY_WGS_FISSION_SOURCES);
     ScopedCopySTLvectors(groupset, q_moments_local, mat_src);
   }
 
@@ -59,7 +57,6 @@ void lbs::SteadySolver::ComputeBalance()
 
   //======================================== Compute absorption, material-source
   //                                         and in-flow
-  size_t num_groups=groups.size();
   double local_out_flow   = 0.0;
   double local_in_flow    = 0.0;
   double local_absorption = 0.0;
@@ -100,7 +97,8 @@ void lbs::SteadySolver::ComputeBalance()
               for (const auto &group : groupset.groups)
               {
                 const int g = group.id;
-                const double psi = bndry->boundary_flux[g];
+                const double psi = *bndry->HeterogenousPsiIncoming(cell.local_id,
+                                                                  f, fi, n, g, 0);
                 local_in_flow -= mu * wt * psi * IntFi_shapeI;
               }//for g
             }//for fi

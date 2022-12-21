@@ -1,7 +1,7 @@
 -- 3D LinearBSolver test of a block of graphite with an air cavity. DSA and TG
 -- SDM: PWLD
--- Test: WGS groups [0-62] Iteration    54 Residual 7.40763e-07 CONVERGED
--- and   WGS groups [63-167] Iteration    69 Residual 9.23791e-07 CONVERGED
+-- Test: WGS groups [0-62] Iteration    54 Residual 7.88852e-07 CONVERGED
+-- and   WGS groups [63-167] Iteration    69 Residual 9.78723e-07 CONVERGED
 num_procs = 4
 
 
@@ -138,8 +138,8 @@ bsrc[1] = 1.0/4.0/math.pi;
 --chiLBSSetProperty(phys1,BOUNDARY_CONDITION,ZMAX,INCIDENT_ISOTROPIC,bsrc);
 
 --############################################### Initialize and Execute Solver
-chiLBSInitialize(phys1)
-chiLBSExecute(phys1)
+chiSolverInitialize(phys1)
+chiSolverExecute(phys1)
 
 --############################################### Get field functions
 fflist,count = chiLBSGetScalarFieldFunctionList(phys1)
