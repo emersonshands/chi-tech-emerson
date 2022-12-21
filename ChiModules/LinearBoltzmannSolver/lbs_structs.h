@@ -4,6 +4,8 @@
 #include <ChiMath/chi_math.h>
 #include <ChiPhysics/PhysicsMaterial/transportxsections/material_property_transportxsections.h>
 
+#include <utility>
+
 namespace lbs
 {
 
@@ -34,6 +36,38 @@ enum class AngleAggregationType
   POLAR = 2,
   AZIMUTHAL = 3,
 };
+
+enum class BoundaryType
+{
+  VACUUM = 1,
+  INCIDENT_ISOTROPIC = 2,
+  REFLECTING = 3,
+  INCIDENT_ANISTROPIC_HETEROGENOUS = 4
+};
+
+struct BoundaryPreference
+{
+  BoundaryType type;
+  std::vector<double> isotropic_mg_source;
+  std::string source_function;
+};
+
+enum SourceFlags : int
+{
+  NO_FLAGS_SET              = 0,
+  APPLY_FIXED_SOURCES       = (1 << 0),
+  APPLY_WGS_SCATTER_SOURCES = (1 << 1),
+  APPLY_AGS_SCATTER_SOURCES = (1 << 2),
+  APPLY_WGS_FISSION_SOURCES = (1 << 3),
+  APPLY_AGS_FISSION_SOURCES = (1 << 4)
+};
+
+inline SourceFlags operator|(const SourceFlags f1,
+                             const SourceFlags f2)
+{
+  return static_cast<SourceFlags>(static_cast<int>(f1) |
+                                  static_cast<int>(f2));
+}
 
 /**Struct for storing LBS options.*/
 struct Options
@@ -86,7 +120,7 @@ public:
               int in_num_moms,
               const chi_physics::TransportCrossSections& in_xs_mapping,
               double in_volume,
-              const std::vector<bool>& in_face_local_flags,
+              std::vector<bool>  in_face_local_flags,
               bool cell_on_boundary) :
     phi_address(in_phi_address),
     num_nodes(in_num_nodes),
@@ -94,7 +128,7 @@ public:
     num_grps_moms(in_num_grps*in_num_moms),
     xs(&in_xs_mapping),
     volume(in_volume),
-    face_local_flags(in_face_local_flags)
+    face_local_flags(std::move(in_face_local_flags))
   {
     if (cell_on_boundary)
       outflow.resize(num_grps,0.0);

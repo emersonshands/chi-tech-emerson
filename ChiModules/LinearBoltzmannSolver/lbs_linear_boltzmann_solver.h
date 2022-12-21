@@ -26,35 +26,11 @@ typedef sweep_namespace::SchedulingAlgorithm SchedulingAlgorithm;
 
 namespace lbs
 {
-enum class BoundaryType
-{
-  VACUUM = 1,
-  INCIDENT_ISOTROPIC = 2,
-  REFLECTING = 3
-};
-  enum SourceFlags : int
-  {
-    NO_FLAGS_SET              = 0,
-    APPLY_FIXED_SOURCES       = (1 << 0),
-    APPLY_WGS_SCATTER_SOURCES = (1 << 1),
-    APPLY_AGS_SCATTER_SOURCES = (1 << 2),
-    APPLY_WGS_FISSION_SOURCES = (1 << 3),
-    APPLY_AGS_FISSION_SOURCES = (1 << 4)
-  };
-
-  inline SourceFlags operator|(const SourceFlags f1,
-                               const SourceFlags f2)
-  {
-    return static_cast<SourceFlags>(static_cast<int>(f1) |
-                                    static_cast<int>(f2));
-  }
 
 typedef std::function<void(LBSGroupset&          groupset,
                            std::vector<double>&  destination_q,
                            SourceFlags           source_flags)>
                            SetSourceFunction;
-
-
 
 //################################################################### Class def
 /**A neutral particle transport solver.*/
@@ -92,8 +68,8 @@ public:
   //the stack to use as default. This is loaded during initparrays
   std::vector<std::pair<BoundaryType, int>>         boundary_types;
   std::vector<std::vector<double>>                  incident_P0_mg_boundaries;
-  std::vector<double>                               zero_boundary;
   std::vector<std::shared_ptr<SweepBndry>>          sweep_boundaries;
+  std::map<uint64_t, BoundaryPreference>            boundary_preferences;
 
   chi_math::UnknownManager flux_moments_uk_man;
 

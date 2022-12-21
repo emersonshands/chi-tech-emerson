@@ -209,6 +209,7 @@ int chiLBSSetProperty(lua_State *L)
     if (btype == (int)lbs::BoundaryType::VACUUM)
     {
       lbs_solver.boundary_types[bid].first = lbs::BoundaryType::VACUUM;
+      lbs_solver.boundary_preferences[bid] = {lbs::BoundaryType::VACUUM};
       chi::log.Log() << "Boundary " << bid << " set to Vacuum.";
     }
     else if (btype == (int)lbs::BoundaryType::INCIDENT_ISOTROPIC)
@@ -266,6 +267,8 @@ int chiLBSSetProperty(lua_State *L)
         lbs::BoundaryType::INCIDENT_ISOTROPIC;
       lbs_solver.boundary_types[bid].second= static_cast<int>(index);
 
+      lbs_solver.boundary_preferences[bid] =
+        {lbs::BoundaryType::INCIDENT_ISOTROPIC,values};
       chi::log.Log()
         << "Isotropic boundary condition for boundary " << bid
         << " loaded with " << table_len << " groups.";
@@ -273,7 +276,25 @@ int chiLBSSetProperty(lua_State *L)
     else if (btype == (int)lbs::BoundaryType::REFLECTING)
     {
       lbs_solver.boundary_types[bid].first = lbs::BoundaryType::REFLECTING;
+
+      lbs_solver.boundary_preferences[bid] = {lbs::BoundaryType::REFLECTING};
       chi::log.Log() << "Boundary " << bid << " set to Reflecting.";
+    }
+    else if (btype == (int)lbs::BoundaryType::INCIDENT_ANISTROPIC_HETEROGENOUS)
+    {
+      if (numArgs!=5)
+        LuaPostArgAmountError("chiLBSSetProperty:BOUNDARY_CONDITION:" +
+                              std::to_string(bid) +
+                              ":INCIDENT_ANISTROPIC_HETEROGENOUS",5,numArgs);
+
+      LuaCheckStringValue(fname, L, 5);
+      const std::string lua_fname = lua_tostring(L,5);
+
+      lbs_solver.boundary_types[bid].first = lbs::BoundaryType::INCIDENT_ANISTROPIC_HETEROGENOUS;
+
+      lbs_solver.boundary_preferences[bid] =
+        {lbs::BoundaryType::INCIDENT_ANISTROPIC_HETEROGENOUS,{}, lua_fname};
+      chi::log.Log() << "Boundary " << bid << " set to Anisotropic Heterogenous.";
     }
     else
     {

@@ -1,4 +1,5 @@
 #include "lbs_linear_boltzmann_solver.h"
+#include "Tools/boundary_func_lua.h"
 
 //###################################################################
 /**Initializes transport related boundaries. */
@@ -6,15 +7,11 @@ void lbs::SteadySolver::InitializeBoundaries()
 {
   //================================================== Initialize default
   //                                                   incident boundary
-  typedef chi_mesh::sweep_management::BoundaryVacuum SweepVacuumBndry;
-  typedef chi_mesh::sweep_management::BoundaryIncidentHomogenous SweepIncHomoBndry;
-  typedef chi_mesh::sweep_management::BoundaryReflecting SweepReflectingBndry;
+  using namespace chi_mesh::sweep_management;
   std::vector<std::vector<double>>& flux_vec = incident_P0_mg_boundaries;
 
-  // Defining default Vacuum boundary
-  zero_boundary.resize(groups.size(),0.0);
-
   // ================================================= Populate boundaries
+  const size_t G = groups.size();
   if (sweep_boundaries.empty())
   {
     chi_mesh::Vector3 ihat(1.0, 0.0, 0.0);
@@ -23,12 +20,14 @@ void lbs::SteadySolver::InitializeBoundaries()
     int bndry_id=0;
     for (auto bndry_type : boundary_types)
     {
-      int vec_index = bndry_type.second;
+      const int vec_index = bndry_type.second;
 
       if (bndry_type.first == lbs::BoundaryType::VACUUM)
-        sweep_boundaries.emplace_back(new SweepVacuumBndry(zero_boundary));
+        sweep_boundaries.emplace_back(
+          new BoundaryIsotropicHomogenous(G,std::vector<double>(G,0.0)));
       else if (bndry_type.first == lbs::BoundaryType::INCIDENT_ISOTROPIC)
-        sweep_boundaries.emplace_back(new SweepIncHomoBndry(flux_vec[vec_index]));
+        sweep_boundaries.emplace_back(
+          new BoundaryIsotropicHomogenous(G,flux_vec[vec_index]));
       else if (bndry_type.first == lbs::BoundaryType::REFLECTING)
       {
         chi_mesh::Normal normal;
@@ -39,11 +38,21 @@ void lbs::SteadySolver::InitializeBoundaries()
         if (bndry_id == 4) normal = khat;
         if (bndry_id == 5) normal = khat*-1.0;
 
-        sweep_boundaries.emplace_back(new SweepReflectingBndry(zero_boundary, normal));
+        sweep_boundaries.emplace_back(new BoundaryReflecting(G, normal));
+      }
+      else if (bndry_type.first == BoundaryType::INCIDENT_ANISTROPIC_HETEROGENOUS)
+      {
+        const auto& bndry_pref = boundary_preferences.at(bndry_id);
+        const auto& lua_fname = bndry_pref.source_function;
+
+        sweep_boundaries.emplace_back(new BoundaryIncidentHeterogenous(G,
+                 std::make_unique<BoundaryFunctionToLua>(lua_fname), bndry_id));
       }
 
       ++bndry_id;
     }
+
+
   }//if empty
 
 }
