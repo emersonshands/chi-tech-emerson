@@ -26,32 +26,11 @@ typedef sweep_namespace::SchedulingAlgorithm SchedulingAlgorithm;
 
 namespace lbs
 {
-enum class BoundaryType
-{
-  VACUUM = 1,
-  INCIDENT_ISOTROPIC = 2,
-  REFLECTING = 3
-};
-  enum SourceFlags : int
-  {
-    NO_FLAGS_SET               = 0,
-    APPLY_MATERIAL_SOURCE      = (1 << 0),
-    APPLY_WGS_SCATTER_SOURCE   = (1 << 1),
-    APPLY_AGS_SCATTER_SOURCE   = (1 << 2),
-    APPLY_WGS_FISSION_SOURCE   = (1 << 3),
-    APPLY_AGS_FISSION_SOURCE   = (1 << 4)
-  };
 
-  inline SourceFlags operator|(const SourceFlags f1,
-                               const SourceFlags f2)
-  {
-    return static_cast<SourceFlags>(static_cast<int>(f1) |
-                                    static_cast<int>(f2));
-  }
-
-
-
-
+typedef std::function<void(LBSGroupset&          groupset,
+                           std::vector<double>&  destination_q,
+                           SourceFlags           source_flags)>
+                           SetSourceFunction;
 
 //################################################################### Class def
 /**A neutral particle transport solver.*/
@@ -89,8 +68,8 @@ public:
   //the stack to use as default. This is loaded during initparrays
   std::vector<std::pair<BoundaryType, int>>         boundary_types;
   std::vector<std::vector<double>>                  incident_P0_mg_boundaries;
-  std::vector<double>                               zero_boundary;
   std::vector<std::shared_ptr<SweepBndry>>          sweep_boundaries;
+  std::map<uint64_t, BoundaryPreference>            boundary_preferences;
 
   chi_math::UnknownManager flux_moments_uk_man;
 
@@ -104,6 +83,9 @@ public:
   std::vector<double> delta_phi_local;
   std::vector<std::vector<double>> psi_new_local;
   std::vector<double> precursor_new_local;
+
+protected:
+  SetSourceFunction active_set_source_function;
 
  public:
   SteadySolver (const SteadySolver&) = delete;
@@ -120,7 +102,7 @@ public:
   //01b
   void PrintSimHeader();
   //01c
-  void InitMaterials(std::set<int> &material_ids);
+  void InitMaterials();
   //01d
   virtual void InitializeSpatialDiscretization();
   void ComputeUnitIntegrals();
@@ -166,10 +148,15 @@ public:
                     const std::vector<double>& ref_phi_old,
                     std::vector<double>& ref_phi_new);
   void AssembleWGDSADeltaPhiVector(LBSGroupset& groupset,
-                                   const double *ref_phi_old,
-                                   const double *ref_phi_new);
+                                   const std::vector<double>& ref_phi_old,
+                                   const std::vector<double>& ref_phi_new);
+
+  void AssembleWGDSADeltaPhiVector(LBSGroupset& groupset,
+                                   const std::vector<double>& phi_in);
+
   void DisAssembleWGDSADeltaPhiVector(LBSGroupset& groupset,
-                                      double *ref_phi_new);
+                                      std::vector<double>& ref_phi_new);
+
   static void CleanUpWGDSA(LBSGroupset& groupset);
 
   //03e
@@ -178,10 +165,12 @@ public:
                     const std::vector<double>& ref_phi_old,
                     std::vector<double>& ref_phi_new);
   void AssembleTGDSADeltaPhiVector(LBSGroupset& groupset,
-                                   const double *ref_phi_old,
-                                   const double *ref_phi_new);
+                                   const std::vector<double>& ref_phi_old,
+                                   const std::vector<double>& ref_phi_new);
+  void AssembleTGDSADeltaPhiVector(LBSGroupset& groupset,
+                                   const std::vector<double>& phi_in);
   void DisAssembleTGDSADeltaPhiVector(LBSGroupset& groupset,
-                                      double *ref_phi_new);
+                                      std::vector<double>& ref_phi_new);
   static void CleanUpTGDSA(LBSGroupset& groupset);
   //03f
   void ResetSweepOrderings(LBSGroupset& groupset);
@@ -205,21 +194,32 @@ public:
                        std::vector<double>& flux_moments,
                        bool single_file=false);
 
-  //IterativeMethods
-  virtual void SetSource(LBSGroupset& groupset,
-                         std::vector<double>&  destination_q,
-                         SourceFlags source_flags);
+  //Iterative Operations
+  void SetSource(LBSGroupset& groupset,
+                 std::vector<double>&  destination_q,
+                 SourceFlags source_flags);
   double ComputePiecewiseChange(LBSGroupset& groupset);
   virtual std::shared_ptr<SweepChunk> SetSweepChunk(LBSGroupset& groupset);
+  double ComputeFissionProduction(const std::vector<double>& phi);
+  virtual double ComputeFissionRate(bool previous);
+  //Iterative Methods
   bool ClassicRichardson(LBSGroupset& groupset,
                          MainSweepScheduler& sweep_scheduler,
                          SourceFlags source_flags,
+                         const SetSourceFunction& set_source_function,
                          bool log_info = true);
   bool GMRES(LBSGroupset& groupset,
              MainSweepScheduler& sweep_scheduler,
              SourceFlags lhs_src_scope,
              SourceFlags rhs_src_scope,
+             const SetSourceFunction& set_source_function,
              bool log_info = true);
+  bool Krylov(LBSGroupset& groupset,
+              MainSweepScheduler& sweep_scheduler,
+              SourceFlags lhs_src_scope,
+              SourceFlags rhs_src_scope,
+              const SetSourceFunction& set_source_function,
+              bool log_info = true);
 
   //Vector assembly
   void SetPETScVecFromSTLvector(LBSGroupset& groupset, Vec x,
@@ -239,6 +239,10 @@ public:
 
   //precursors
   void ComputePrecursors();
+
+  //compute_leakage
+  std::vector<double> ComputeLeakage(int groupset_id,
+                        uint64_t boundary_id) const;
 };
 
 }

@@ -325,9 +325,10 @@ lbs_curvilinear::SweepChunkPWL::Sweep(chi_mesh::sweep_management::AngleSet* angl
         const auto& psi_uk_man = groupset.psi_uk_man;
         for (int i = 0; i < num_nodes; ++i)
         {
-          int64_t ir = grid_fe_view.MapDOFLocal(cell,i,psi_uk_man,angle_num,0);
+          const int64_t imap = grid_fe_view.MapDOFLocal(cell,i,psi_uk_man,
+                                                   angle_num,gs_ss_begin);
           for (int gsg = 0; gsg < gs_ss_size; ++gsg)
-            output_psi[ir + gsg] = b[gsg][i];
+            output_psi[imap + gsg] = b[gsg][i];
         }
       }//if save psi
 
