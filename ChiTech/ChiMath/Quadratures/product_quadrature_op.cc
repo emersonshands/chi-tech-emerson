@@ -60,121 +60,52 @@ void chi_math::ProductQuadratureOp::CheckInputs()
   OptimizeForPolarSymmetry(4.0*M_PI);
 }
 
-void chi_math::ProductQuadratureOp::
-OptimizeForPolarSymmetry(const double normalization)
-{
-  std::vector<chi_math::QuadraturePointPhiTheta> new_abscissae;
-  std::vector<double>                            new_weights;
-  std::vector<chi_mesh::Vector3>                 new_omegas;
-  std::vector<double>                            new_polar_ang;
-  std::vector<double>                            new_azimu_ang;
-
-  const size_t num_pol = polar_ang.size();
-  const size_t num_azi = azimu_ang.size();
-
-  //Change this to azimuthal angle between 0 and pi
-  // Grab all polar angles
-  // we want only the azimuthal positive in y
-  std::vector<unsigned int> new_azimu_map;
-  new_polar_ang = polar_ang;
-  for (size_t a = 0; a<num_azi; ++a)
-  {
-    if (azimu_ang[a]<M_PI)
-    {
-      new_azimu_ang.push_back(azimu_ang[a]);
-      new_azimu_map.push_back(a);
-    }
-  }
-
-  const size_t new_num_azimu = new_azimu_ang.size();
-  double weight_sum = 0.0;
-  for (size_t a=0; a<new_num_azimu; ++a)
-    for (size_t p=0; p<num_pol; ++p)
-    {
-      const auto amap = new_azimu_map[a];
-      const auto dmap = GetAngleNum(p,amap);
-      new_weights.push_back(weights[dmap]);
-      weight_sum += weights[dmap];
-    }
-
-  if (normalization > 0.0)
-    for (double& w : new_weights)
-      w *= normalization/weight_sum;
-
-  chi_math::ProductQuadrature::AssembleCosines(new_azimu_ang,
-                                               new_polar_ang,new_weights,false);
-  polar_ang = new_polar_ang;
-  azimu_ang = new_azimu_ang;
-}
-
-void chi_math::ProductQuadratureOp::AxisShift()
-{
-  if (d2m_op_built and m2d_op_built)
-  {
-    std::vector<chi_math::QuadraturePointPhiTheta> new_abscissae;
-    std::vector<double> new_weights;
-    std::vector<chi_mesh::Vector3> new_omegas;
-    std::vector<double> new_polar_ang;
-    std::vector<double> new_azimu_ang;
-
-    const size_t num_pol = polar_ang.size();
-    const size_t num_azi = azimu_ang.size();
-
-    //Grab all old angles
-    std::vector<unsigned int> new_azimu_map;
-    VecDbl old_polar_ang = polar_ang;
-    VecDbl old_azimu_ang = azimu_ang;
-    polar_ang.clear();
-    azimu_ang.clear();
-    VecDbl mu;
-    VecDbl eta;
-    VecDbl zi;
-    //Find mu, eta, zi
-    for (size_t a = 0; a < num_pol; ++a)
-    {
-      for (size_t b = 0; b < num_azi; ++b)
-      {
-        double zi_old = cos(old_polar_ang[a]);
-        double eta_old = sqrt(1 - pow(zi_old, 2)) * sin(old_azimu_ang[b]);
-        double zi_new = eta_old;
-        double eta_new = -zi_old;
-        double new_azimu = asin(eta_new / sqrt(1.0 - pow(zi_new, 2)));
-        double new_polar = acos(eta_old);
-        if (cos(old_azimu_ang[b]) > 0.0 and new_azimu < 0.0)
-          new_azimu = 2.0 * M_PI - new_azimu;
-        if (cos(old_azimu_ang[b]) < 0.0)
-          new_azimu = M_PI - new_azimu;
-        new_azimu_ang.push_back(new_azimu);
-        if (std::count(new_polar_ang.begin(), new_polar_ang.end(), new_polar))
-          new_polar_ang.push_back(new_polar);
-      }
-//    }
-//    for (size_t a = 0; a<num_azi; ++a)
+//void chi_math::ProductQuadratureOp::
+//OptimizeForPolarSymmetry(const double normalization)
+//{
+//  std::vector<chi_math::QuadraturePointPhiTheta> new_abscissae;
+//  std::vector<double>                            new_weights;
+//  std::vector<chi_mesh::Vector3>                 new_omegas;
+//  std::vector<double>                            new_polar_ang;
+//  std::vector<double>                            new_azimu_ang;
+//
+//  const size_t num_pol = polar_ang.size();
+//  const size_t num_azi = azimu_ang.size();
+//
+//  //Change this to azimuthal angle between 0 and pi
+//  // Grab all polar angles
+//  // we want only the azimuthal positive in y
+//  std::vector<unsigned int> new_azimu_map;
+//  new_polar_ang = polar_ang;
+//  for (size_t a = 0; a<num_azi; ++a)
+//  {
+//    if (azimu_ang[a]<M_PI)
 //    {
-//      if (azimu_ang[a]<M_PI)
-//      {
-//        new_azimu_ang.push_back(azimu_ang[a]);
-//        new_azimu_map.push_back(a);
-//      }
+//      new_azimu_ang.push_back(azimu_ang[a]);
+//      new_azimu_map.push_back(a);
+//    }
+//  }
+//
+//  const size_t new_num_azimu = new_azimu_ang.size();
+//  double weight_sum = 0.0;
+//  for (size_t a=0; a<new_num_azimu; ++a)
+//    for (size_t p=0; p<num_pol; ++p)
+//    {
+//      const auto amap = new_azimu_map[a];
+//      const auto dmap = GetAngleNum(p,amap);
+//      new_weights.push_back(weights[dmap]);
+//      weight_sum += weights[dmap];
 //    }
 //
-//    const size_t new_num_azimu = new_azimu_ang.size();
-//    double weight_sum = 0.0;
-//    for (size_t a=0; a<new_num_azimu; ++a)
-//      for (size_t p=0; p<num_pol; ++p)
-//      {
-//        const auto amap = new_azimu_map[a];
-//        const auto dmap = GetAngleNum(p,amap);
-//        new_weights.push_back(weights[dmap]);
-//        weight_sum += weights[dmap];
-//      }
-//    chi_math::ProductQuadrature::AssembleCosines(new_azimu_ang,
-//                                                 new_polar_ang,new_weights,false);
-//    polar_ang = new_polar_ang;
-//    azimu_ang = new_azimu_ang;
-    }
-  }
-}
+//  if (normalization > 0.0)
+//    for (double& w : new_weights)
+//      w *= normalization/weight_sum;
+//
+//  chi_math::ProductQuadrature::AssembleCosines(new_azimu_ang,
+//                                               new_polar_ang,new_weights,false);
+//  polar_ang = new_polar_ang;
+//  azimu_ang = new_azimu_ang;
+//}
 
 void chi_math::ProductQuadratureOp::FilterMoments()
 {
@@ -201,7 +132,7 @@ double chi_math::ProductQuadratureOp::InnerProduct(const VecDbl& f,
   assert(!f.empty());
   assert(!g.empty());
   assert(!wt.empty());
-  size_t fsize = f.size();
+  size_t fsize = wt.size();
   double sum_val = 0.0;
   for (size_t i=0; i<fsize; ++i)
   {
@@ -216,17 +147,44 @@ void chi_math::ProductQuadratureOp::MakeHarmonicIndices()
   const int nquad = static_cast<int>(sn);
   const int Lmax = 2 * (nquad - 1);
   for (int ell = 0; ell <= Lmax; ++ell)
-    for (int m = 0; m <= ell; m += 1)
+    for (int m = -ell; m <= ell; m += 1)
     {
+      if (m_to_ell_em_map.size()==int(pow(nquad,2)))
+        continue;
       if (ell >= nquad)
       {
-        if (m <= (ell - nquad)) continue;
-        if (m >= nquad) continue;
-        m_to_ell_em_map.emplace_back(ell, m);
+        if
+          ( abs(m)>ell - nquad and abs(m)<=nquad and m <nquad
+           and (ell + abs(m)) % 2 == 0)
+        {
+          m_to_ell_em_map.emplace_back(ell, m);
+//          printf("Harmonics found l=%i m=%i \n", ell, m);
+        } else
+          continue;
       }
+//      else
+//        if(ell>nquad)
+//      {
+//        if
+//          (ell==5 and abs(m)==3
+//           and (ell+abs(m))%2==0)
+//        {
+//          m_to_ell_em_map.emplace_back(ell, m);
+//          printf("Harmonics found l=%i m=%i \n", ell, m);
+//        }
+//        if
+//          (ell==6 and m==-4
+//           and (ell+abs(m))%2==0)
+//        {
+//          m_to_ell_em_map.emplace_back(ell, m);
+//          printf("Harmonics found l=%i m=%i \n", ell, m);
+//        }
+//      }
       else
+        if((ell+abs(m))%2==0)
       {
         m_to_ell_em_map.emplace_back(ell, m);
+//        printf("Harmonics found l=%i m=%i \n",ell,m);
       }
     }
 }
@@ -316,7 +274,7 @@ void chi_math::ProductQuadratureOp::BuildDiscreteToMomentOperator
                                     cur_angle.phi,
                                     cur_angle.theta);
         double w = weights[n];
-        printf("Weights %0.4f and points %0.4f \n",w,value);
+//        printf("Weights %0.4f and points %0.4f \n",w,value);
         cur_mom.push_back(value*w);
       }
       cmt.push_back(cur_mom);
@@ -345,7 +303,7 @@ void chi_math::ProductQuadratureOp::BuildDiscreteToMomentOperator
     }
 
     //Now to normalize the values
-    for (int i = 0; i<ndir;++i)
+    for (int i = 0; i<nmom;++i)
     {
       double normal = (4.0*M_PI)/(2.0*i+1.0);
       double multiplier = sqrt(normal /
@@ -355,7 +313,7 @@ void chi_math::ProductQuadratureOp::BuildDiscreteToMomentOperator
     }
     //Make the d2m matrix and m2d matrix
     MatDbl holder_m2d;
-    for (int i = 0; i<ndir;++i)
+    for (int i = 0; i<nmom;++i)
     {
       VecDbl temp_d2m;
       VecDbl temp_m2d;
@@ -396,7 +354,6 @@ void chi_math::ProductQuadratureOp::BuildMomentToDiscreteOperator
   //Now filter by the moment number given
   if(moments!=0 and d2m_op_built and m2d_op_built and moments!=sn)
     FilterMoments();
-  AxisShift();
 }
 
 

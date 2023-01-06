@@ -1,10 +1,8 @@
 #include <algorithm>
 #include <cmath>
 #include "ChiMath/Quadratures/LegendrePoly/legendrepoly.h"
-#include <iomanip>
 #include "chi_runtime.h"
 #include "angular_quadrature_triangle.h"
-#include "chi_log.h"
 #include "ChiMath/chi_math.h"
 #include <cassert>
 

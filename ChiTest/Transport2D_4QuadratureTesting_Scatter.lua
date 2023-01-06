@@ -68,11 +68,11 @@ for g=1,num_groups do
 end
 
 --========== ProdQuad
---chiLog(LOG_0,"Creating GLC quadratures")
-----pquad = chiCreateProductQuadrature(GAUSS_LEGENDRE_CHEBYSHEV,1,1)
---chiLog(LOG_0,"Altering Quadrature")
--- pquadOp2 = chiCreateProductQuadratureOperator(pquad,3,2,1)
-pquadOp = chiCreateAngularQuadratureTriangle(8,3)
+chiLog(LOG_0,"Creating GLC quadratures")
+pquad = chiCreateProductQuadrature(GAUSS_LEGENDRE_CHEBYSHEV,2,2)
+chiLog(LOG_0,"Altering Quadrature")
+pquadOp = chiCreateProductQuadratureOperator(pquad,3,4)
+--pquadOp = chiCreateAngularQuadratureTriangle(4,3)
 
 --========== Groupset def
 gs0 = chiLBSCreateGroupset(phys1)
@@ -107,9 +107,13 @@ end
 chiLBSSetProperty(phys1,DISCRETIZATION_METHOD,PWLD)
 
 --############################################### Initialize and Execute Solver
-chiLBSInitialize(phys1)
-chiLBSExecute(phys1)
+chiLBSSetProperty(phys1,DISCRETIZATION_METHOD,PWLD)
+chiLBSSetProperty(phys1,SCATTERING_ORDER,1)
+chiLBSSetProperty(phys1,SAVE_ANGULAR_FLUX,true)
 
+--############################################### Initialize and Execute Solver
+chiSolverInitialize(phys1)
+chiSolverExecute(phys1)
 --############################################### Get field functions
 fflist,count = chiLBSGetScalarFieldFunctionList(phys1)
 --############################################### Slice plot
@@ -126,43 +130,15 @@ for k=1,count do
     chiFFInterpolationExportPython(slices[k])
 end
 
---############################################### Volume integrations
-ffi1 = chiFFInterpolationCreate(VOLUME)
-curffi = ffi1
-chiFFInterpolationSetProperty(curffi,OPERATION,OP_MAX)
-chiFFInterpolationSetProperty(curffi,LOGICAL_VOLUME,vol1)
-chiFFInterpolationSetProperty(curffi,ADD_FIELDFUNCTION,fflist[1])
+if master_export == nil then
+    chiFFInterpolationExportPython(slice2)
+end
 
-chiFFInterpolationInitialize(curffi)
-chiFFInterpolationExecute(curffi)
-maxval = chiFFInterpolationGetValue(curffi)
-
-chiLog(LOG_0,string.format("Max-value1=%.5e", maxval))
-
-ffi1 = chiFFInterpolationCreate(VOLUME)
-curffi = ffi1
-chiFFInterpolationSetProperty(curffi,OPERATION,OP_MAX)
-chiFFInterpolationSetProperty(curffi,LOGICAL_VOLUME,vol0)
-chiFFInterpolationSetProperty(curffi,ADD_FIELDFUNCTION,fflist[20])
-
-chiFFInterpolationInitialize(curffi)
-chiFFInterpolationExecute(curffi)
-maxval = chiFFInterpolationGetValue(curffi)
-
-chiLog(LOG_0,string.format("Max-value2=%.5e", maxval))
-
+if (chi_location_id == 0 and master_export == nil) then
+    local handle = io.popen("python3 ZPFFI00.py")
+end
 --############################################### Quadrature print
 --chiPrintM2D(pquadOp);
 --chiPrintD2M(pquadOp);
---############################################### Exports
-chiExportFieldFunctionToVTKG(fflist[1],"Phi2D_Scatter","Phi")
 
---############################################### Plots
-if (chi_location_id == 0 and master_export == nil) then
-
-    --os.execute("python ZPFFI00.py")
-    ----os.execute("python ZPFFI11.py")
-    --local handle = io.popen("python ZPFFI00.py")
-    print("Execution completed")
-end
 

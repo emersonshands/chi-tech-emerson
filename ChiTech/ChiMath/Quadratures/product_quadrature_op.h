@@ -4,7 +4,7 @@
 #include "ChiMath/Quadratures/quadrature.h"
 #include "ChiMath/Quadratures/angular_product_quadrature.h"
 #include "ChiMath/Quadratures/LegendrePoly/legendrepoly.h"
-#include "ChiMath/chi_math_04_gaussian_elimination_pivoting.h"
+#include "ChiMath/chi_math_04_Matrix_operations.h"
 namespace chi_math
 {
   class ProductQuadratureOp;
@@ -30,8 +30,7 @@ public:
   void BuildDiscreteToMomentOperator();
   void BuildMomentToDiscreteOperator();
   // Had to match up to dr. morel's symmetry;
-  void OptimizeForPolarSymmetry(double normalization) override;
-  void AxisShift();
+//  void OptimizeForPolarSymmetry(double normalization) override;
   void FilterMoments();
 };
 #endif //CHITECHMATRIXWORK_PRODUCT_QUADRATURE_OP_H

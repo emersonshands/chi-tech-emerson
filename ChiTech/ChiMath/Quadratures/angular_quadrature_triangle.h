@@ -4,7 +4,7 @@
 #include "ChiMath/Quadratures/angular_quadrature_base.h"
 #include "ChiMath/Quadratures/quadrature_gausslegendre.h"
 #include "ChiMath/chi_math.h"
-#include "ChiMath/chi_math_04_gaussian_elimination_pivoting.h"
+#include "ChiMath/chi_math_04_Matrix_operations.h"
 
 namespace chi_math
 {
