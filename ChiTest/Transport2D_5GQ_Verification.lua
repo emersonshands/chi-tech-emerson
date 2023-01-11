@@ -65,10 +65,10 @@ for g=1,num_groups do
 end
 
 --========== ProdQuad
---pquad = chiCreateProductQuadrature(GAUSS_LEGENDRE_CHEBYSHEV,1,1)
---chiOptimizeAngularQuadratureForPolarSymmetry(pquad,4.0*math.pi)
+pquad = chiCreateProductQuadrature(GAUSS_LEGENDRE_CHEBYSHEV,8,8)
+chiOptimizeAngularQuadratureForPolarSymmetry(pquad,4.0*math.pi)
 --pquad = chiCreateProductQuadratureOperator(pbase,3,4)
-tquad = chiCreateAngularQuadratureTriangle(1,2)
+--pquad = chiCreateAngularQuadratureTriangle(3,16)
 
 
 
@@ -76,7 +76,7 @@ tquad = chiCreateAngularQuadratureTriangle(1,2)
 gs0 = chiLBSCreateGroupset(phys1)
 cur_gs = gs0
 chiLBSGroupsetAddGroups(phys1,cur_gs,0,num_groups-1)
-chiLBSGroupsetSetQuadrature(phys1,cur_gs,tquad)
+chiLBSGroupsetSetQuadrature(phys1,cur_gs,pquad)
 chiLBSGroupsetSetAngleAggregationType(phys1,cur_gs,LBSGroupset.ANGLE_AGG_SINGLE)
 chiLBSGroupsetSetAngleAggDiv(phys1,cur_gs,1)
 chiLBSGroupsetSetGroupSubsets(phys1,cur_gs,1)
@@ -134,7 +134,7 @@ function luaBoundaryFunctionLeft(cell_global_id,
 
             value = normalVal
             --if (phi_theta.phi<1.57079632679 or phi_theta.phi>4.71238898038) then
-            ----if (phi_theta.phi<1.57079632679 and phi_theta.phi>0) then
+            --if (phi_theta.phi<1.57079632679 and phi_theta.phi>0) then
             --    value = normalVal
             --end
 

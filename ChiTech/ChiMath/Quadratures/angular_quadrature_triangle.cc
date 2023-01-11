@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <cmath>
+#include "ChiMath/Quadratures/LegendrePoly/legendrepoly.h"
 #include <iomanip>
 #include "chi_runtime.h"
 #include "angular_quadrature_triangle.h"
@@ -81,16 +82,23 @@ TriangleInit(unsigned int sn)
   for(auto u : old_omega.qpoints)
   {
     double deltaVPhi = M_PI/(2.0*(double)num_div);
-    //By polar symmetry we want to remove any negative polar angles
-    if (u.x <= 0.0)
+    // When the QuadratureGaussLegendre gives us the x points we will
+    // use for our z positions on the unit sphere, they are ordered in
+    // descending order largest magnitude towards 0 on the negative side,
+    // and ascending order on the positive side of 0
+    // The weights are defined using the weights given by the GL quadrature
+    // which is the position in the weights that weightPos keeps track of.
+    // This will ignore the positive x values, and just use the descending
+    // order given by the quadrature and use the absolute value of the x values.
+    if (u.x >= 0.0)
     {
-      weightPos++;
-      continue;
+      break;
     }
     for(int v=0; v<num_div;++v)
     {
+      double new_z_value = abs(u.x);
       double phi = deltaVPhi/2.0 + (double)v*deltaVPhi;
-      double theta = acos(u.x);
+      double theta = acos(new_z_value);
       new_omega.x = sin(theta)*cos(phi);
       new_omega.y = sin(theta)*sin(phi);
       new_omega.z = cos(theta);
@@ -106,7 +114,7 @@ TriangleInit(unsigned int sn)
   //The order is x,y(done above); -x,y; -x,-y; x,-y
   double xsign = -1.0;
   double ysign = 1.0;
-  size_t size = weights.size();
+  size_t sizew = weights.size();
   for(int k=1;k<=3;++k)
   {
     if(k>1)
@@ -114,7 +122,7 @@ TriangleInit(unsigned int sn)
       ysign=-1.0;
       if(k>2) xsign =1.0;
     }
-    for(size_t l=0;l<size;++l)
+    for(size_t l=0;l<sizew;++l)
     {
       double phi = abscissae[l].phi+k*(M_PI/2.0);
       double theta = abscissae[l].theta;
@@ -124,7 +132,6 @@ TriangleInit(unsigned int sn)
       weights.push_back(weights[l]);
       omegas.emplace_back(new_omega);
       abscissae.emplace_back(phi,theta);
-
     }
   }
   //Now we need to call optimize for polar symmetry to normalize
