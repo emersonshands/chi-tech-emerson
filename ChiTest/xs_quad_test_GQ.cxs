@@ -2,12 +2,22 @@
 # starts at NUM_GROUPS as the first word. After that, NUM_MOMENTS needs to
 # be processed before any of the other keywords.
 NUM_GROUPS 1
-NUM_MOMENTS 1
+NUM_MOMENTS 6
 SIGMA_T_BEGIN
-0   0.1
+0   3.8368924902
 SIGMA_T_END
  
 TRANSFER_MOMENTS_BEGIN
 #Zeroth moment (l=0)
-M_GPRIME_G_VAL 0 0 0 0.0
+M_GPRIME_G_VAL 0 0 0 3.7368924902
+#Zeroth moment (l=1)
+M_GPRIME_G_VAL 1 0 0 3.2368924902
+#Zeroth moment (l=2)
+M_GPRIME_G_VAL 2 0 0 2.2376424902
+#Zeroth moment (l=3)
+M_GPRIME_G_VAL 3 0 0 0.7406412402
+#Zeroth moment (l=4)
+M_GPRIME_G_VAL 4 0 0 -1.2518662577
+#Zeroth moment (l=5)
+M_GPRIME_G_VAL 5 0 0 -3.7368924902
 TRANSFER_MOMENTS_END

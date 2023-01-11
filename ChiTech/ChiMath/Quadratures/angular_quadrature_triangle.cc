@@ -102,10 +102,9 @@ TriangleInit(unsigned int sn)
       new_omega.x = sin(theta)*cos(phi);
       new_omega.y = sin(theta)*sin(phi);
       new_omega.z = cos(theta);
-      weights.push_back(old_omega.weights[weightPos]);
+      weights.push_back(old_omega.weights[weightPos]/num_div);
       omegas.emplace_back(new_omega);
       abscissae.emplace_back(phi,theta);
-
     }
     weightPos++;
     num_div++;

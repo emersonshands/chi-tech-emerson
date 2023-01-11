@@ -65,10 +65,10 @@ for g=1,num_groups do
 end
 
 --========== ProdQuad
-pquad = chiCreateProductQuadrature(GAUSS_LEGENDRE_CHEBYSHEV,8,8)
-chiOptimizeAngularQuadratureForPolarSymmetry(pquad,4.0*math.pi)
+--pquad = chiCreateProductQuadrature(GAUSS_LEGENDRE_CHEBYSHEV,2,2)
+--chiOptimizeAngularQuadratureForPolarSymmetry(pquad,4.0*math.pi)
 --pquad = chiCreateProductQuadratureOperator(pbase,3,4)
---pquad = chiCreateAngularQuadratureTriangle(3,16)
+pquad = chiCreateAngularQuadratureTriangle(3,4)
 
 
 
@@ -132,11 +132,11 @@ function luaBoundaryFunctionLeft(cell_global_id,
         for gi=1,num_groups do
             g = group_indices[gi]
 
-            value = normalVal
+            value = 0.0
             --if (phi_theta.phi<1.57079632679 or phi_theta.phi>4.71238898038) then
-            --if (phi_theta.phi<1.57079632679 and phi_theta.phi>0) then
-            --    value = normalVal
-            --end
+            if (phi_theta.phi<1.57079632679 and phi_theta.phi>0) then
+                value = normalVal
+            end
 
             dof_count = dof_count + 1
             psi[dof_count] = value
