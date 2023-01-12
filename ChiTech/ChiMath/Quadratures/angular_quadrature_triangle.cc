@@ -105,6 +105,7 @@ TriangleInit(unsigned int sn)
       weights.push_back(old_omega.weights[weightPos]/num_div);
       omegas.emplace_back(new_omega);
       abscissae.emplace_back(phi,theta);
+
     }
     weightPos++;
     num_div++;
