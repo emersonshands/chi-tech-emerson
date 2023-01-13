@@ -15,9 +15,12 @@ int chiCreateAngularQuadratureTriangle(lua_State* L){
     LuaPostArgAmountError(fname,2,num_args);
   const int method = lua_tointeger(L,1);
   const int order = lua_tointeger(L,2);
+  int moments = 0;
+  if (num_args==3)
+    moments = lua_tointeger(L,3);
   //constructor should make the matrix automatically given the order and method
   auto new_quad = std::make_shared<chi_math::AngularQuadratureTriangle>
-    (method,order);
+    (method, order, moments);
 
   //push onto stack
   chi::angular_quadrature_stack.push_back(new_quad);

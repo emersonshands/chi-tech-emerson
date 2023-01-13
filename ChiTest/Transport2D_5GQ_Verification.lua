@@ -65,12 +65,12 @@ for g=1,num_groups do
 end
 
 --========== ProdQuad
-pquad = chiCreateProductQuadrature(GAUSS_LEGENDRE_CHEBYSHEV,2,2)
-chiOptimizeAngularQuadratureForPolarSymmetry(pquad,4.0*math.pi)
+--pquad = chiCreateProductQuadrature(GAUSS_LEGENDRE_CHEBYSHEV,2,2)
+--chiOptimizeAngularQuadratureForPolarSymmetry(pquad,4.0*math.pi)
 --pquad = chiCreateProductQuadratureOperator(pbase,3,4)
---pquad = chiCreateAngularQuadratureTriangle(1,4,1)
---chiPrintD2M(pquad)
---chiPrintM2D(pquad)
+pquad = chiCreateAngularQuadratureTriangle(1,4)
+chiPrintD2M(pquad)
+chiPrintM2D(pquad)
 
 --========== Groupset def
 gs0 = chiLBSCreateGroupset(phys1)
@@ -144,6 +144,8 @@ function luaBoundaryFunctionLeft(cell_global_id,
     end
     return psi
 end
+
+----############################EXTRA BC##################################
 function luaBoundaryFunctionRight(cell_global_id,
                               material_id,
                               location,
@@ -240,6 +242,7 @@ function luaBoundaryFunctionTop(cell_global_id,
     end
     return psi
 end
+----############################EXTRA BC##################################
 --############################################### Set boundary conditions
 
 
@@ -248,11 +251,11 @@ for g=1,num_groups do
     bsrc[g] = 0.0
 end
 bsrc[1] = 1.0
---chiLBSSetProperty(phys1,BOUNDARY_CONDITION,XMIN,
---        LBSBoundaryTypes.INCIDENT_ISOTROPIC, bsrc);
 chiLBSSetProperty(phys1,BOUNDARY_CONDITION,XMIN,
-                        LBSBoundaryTypes.INCIDENT_ANISTROPIC_HETEROGENOUS,
-                        "luaBoundaryFunctionLeft");
+        LBSBoundaryTypes.INCIDENT_ISOTROPIC, bsrc);
+--chiLBSSetProperty(phys1,BOUNDARY_CONDITION,XMIN,
+--                        LBSBoundaryTypes.INCIDENT_ANISTROPIC_HETEROGENOUS,
+--                        "luaBoundaryFunctionLeft");
 --chiLBSSetProperty(phys1,BOUNDARY_CONDITION,XMAX,
 --        LBSBoundaryTypes.INCIDENT_ANISTROPIC_HETEROGENOUS,
 --        "luaBoundaryFunctionRight");
