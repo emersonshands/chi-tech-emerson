@@ -65,12 +65,13 @@ for g=1,num_groups do
 end
 
 --========== ProdQuad
---pquad = chiCreateProductQuadrature(GAUSS_LEGENDRE_CHEBYSHEV,2,2)
+--pquad = chiCreateProductQuadrature(GAUSS_LEGENDRE_CHEBYSHEV,1,1)
 --chiOptimizeAngularQuadratureForPolarSymmetry(pquad,4.0*math.pi)
 --pquad = chiCreateProductQuadratureOperator(pbase,3,4)
-pquad = chiCreateAngularQuadratureTriangle(1,4)
-chiPrintD2M(pquad)
-chiPrintM2D(pquad)
+sn = 2
+pquad = chiCreateAngularQuadratureTriangle(1,sn)
+--chiPrintD2M(pquad)
+--chiPrintM2D(pquad)
 
 --========== Groupset def
 gs0 = chiLBSCreateGroupset(phys1)
@@ -267,7 +268,7 @@ chiLBSSetProperty(phys1,BOUNDARY_CONDITION,XMIN,
 --        "luaBoundaryFunctionBottom");
 
 chiLBSSetProperty(phys1,DISCRETIZATION_METHOD,PWLD)
-chiLBSSetProperty(phys1,SCATTERING_ORDER,1)
+chiLBSSetProperty(phys1,SCATTERING_ORDER,3)
 chiLBSSetProperty(phys1,SAVE_ANGULAR_FLUX,true)
 
 --############################################### Initialize and Execute Solver
@@ -286,7 +287,7 @@ chiFFInterpolationInitialize(slice2)
 chiFFInterpolationExecute(slice2)
 
 --############################################### Exports
-if master_export == nil then
+if not master_export == nil then
     chiFFInterpolationExportPython(slice2)
 end
 
@@ -306,11 +307,87 @@ print("YMin")
 chiLog(LOG_0, tostring(leakage3[1]))
 
 --############################################### Plots
-if (chi_location_id == 0 and master_export == nil) then
+if (chi_location_id == 0 and not master_export == nil) then
     local handle = io.popen("python3 ZPFFI00.py")
 end
 
+--CHI Tech product quad s4
+--Balance table:
+--[0]   Absorption rate          = 3.09517e+01
+--[0]   Production rate          = 0.00000e+00
+--[0]   In-flow rate             = 3.24327e+01
+--[0]   Out-flow rate            = 1.48105e+00
+--[0]   Integrated scalar flux   = 3.24327e+01
+--[0]   Net Gain/Loss            = -4.74509e-13
+--[0]   Net Gain/Loss normalized = -1.46306e-14
+
+-- Triangle-
+-- Balance table:
+--[0]   Absorption rate          = 3.14670e+01
+--[0]   Production rate          = 0.00000e+00
+--[0]   In-flow rate             = 3.30308e+01
+--[0]   Out-flow rate            = 1.56378e+00
+--[0]   Integrated scalar flux   = 3.30308e+01
+--[0]   Net Gain/Loss            = -1.77636e-13
+--[0]   Net Gain/Loss normalized = -5.37788e-15
+
+-- Chitech Product
+--Balance table:
+--[0]   Absorption rate          = 3.02777e+01
+--[0]   Production rate          = 0.00000e+00
+--[0]   In-flow rate             = 3.16461e+01
+--[0]   Out-flow rate            = 1.36839e+00
+--[0]   Integrated scalar flux   = 3.16461e+01
+--[0]   Net Gain/Loss            = -1.10911e-12
+--[0]   Net Gain/Loss normalized = -3.50474e-14
+
+--Triangle
+-- Balance table:
+--[0]   Absorption rate          = 3.05236e+01
+--[0]   Production rate          = 0.00000e+00
+--[0]   In-flow rate             = 3.19239e+01
+--[0]   Out-flow rate            = 1.40025e+00
+--[0]   Integrated scalar flux   = 3.19239e+01
+--[0]   Net Gain/Loss            = -1.96509e-13
+--[0]   Net Gain/Loss normalized = -6.15556e-15
+
+--Triangle
+-- Balance table:
+--[0]   Absorption rate          = 2.61459e+01
+--[0]   Production rate          = 0.00000e+00
+--[0]   In-flow rate             = 3.19239e+01
+--[0]   Out-flow rate            = 5.77795e+00
+--[0]   Integrated scalar flux   = 3.19239e+01
+--[0]   Net Gain/Loss            = 1.54412e-09
+--[0]   Net Gain/Loss normalized = 4.83688e-11
+
+--Product
+--Balance table:
+--[0]   Absorption rate          = 2.59998e+01
+--[0]   Production rate          = 0.00000e+00
+--[0]   In-flow rate             = 3.16461e+01
+--[0]   Out-flow rate            = 5.64629e+00
+--[0]   Integrated scalar flux   = 3.16461e+01
+--[0]   Net Gain/Loss            = 1.25661e-09
+--[0]   Net Gain/Loss normalized = 3.97083e-11
 
 
+-- Triangle s2- S 1-
+-- Balance table:
+--[0]   Absorption rate          = 3.40513e+01
+--[0]   Production rate          = 0.00000e+00
+--[0]   In-flow rate             = 3.62760e+01
+--[0]   Out-flow rate            = 2.22471e+00
+--[0]   Integrated scalar flux   = 3.62760e+01
+--[0]   Net Gain/Loss            = -2.46351e-10
+--[0]   Net Gain/Loss normalized = -6.79103e-12
 
-
+-- Triangle s2 - S 0
+--Balance table:
+--[0]   Absorption rate          = 3.41816e+01
+--[0]   Production rate          = 0.00000e+00
+--[0]   In-flow rate             = 3.62760e+01
+--[0]   Out-flow rate            = 2.09440e+00
+--[0]   Integrated scalar flux   = 3.62760e+01
+--[0]   Net Gain/Loss            = 3.42837e-13
+--[0]   Net Gain/Loss normalized = 9.45079e-15

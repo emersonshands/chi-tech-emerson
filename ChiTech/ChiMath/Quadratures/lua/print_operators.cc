@@ -55,7 +55,7 @@ int chiPrintD2M(lua_State* L)
   }
   chi::log.Log() << sum;
   //PRINTING D2M
-  an_quad->BuildDiscreteToMomentOperator();
+  an_quad->BuildDiscreteToMomentOperator(0,0);
   auto d2m = an_quad->GetDiscreteToMomentOperator();
   chi::log.Log() << "Now printing the D2M Matrix";
   for (const std::vector<double>& u : d2m)
@@ -83,8 +83,8 @@ int chiPrintM2D(lua_State* L)
     an_quad = std::static_pointer_cast<chi_math::AngularQuadratureTriangle>(ang_quad);
 //    auto& quad = chi::GetStackItem<chi_math::AngularQuadratureTriangle>(chi::angular_quadrature_stack,handle,fname);
 //    quad.BuildMomentToDiscreteOperator();
-    an_quad->BuildDiscreteToMomentOperator();
-    auto m2d = an_quad->GetDiscreteToMomentOperator();
+    an_quad->BuildMomentToDiscreteOperator(0,0);
+    auto m2d = an_quad->GetMomentToDiscreteOperator();
     chi::log.Log() << "Now printing the M2D Matrix";
     for (std::vector<double> u : m2d)
     {

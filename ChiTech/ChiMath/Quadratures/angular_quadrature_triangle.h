@@ -26,11 +26,13 @@ public:
                             unsigned int inmoments);
 protected:
   void TriangleInit(unsigned int sn);
-  void MakeHarmonicIndices(unsigned int l_max);
+  void MakeHarmonicIndices(unsigned int scattering_order, int dimension) override;
 
 public:
-  void BuildDiscreteToMomentOperator();
-  void BuildMomentToDiscreteOperator();
+  void BuildDiscreteToMomentOperator(unsigned int scattering_order,
+                                     int dimension) override;
+  void BuildMomentToDiscreteOperator(unsigned int scattering_order,
+                                     int dimension) override;
 
   void FilterMoments();
 };

@@ -29,9 +29,9 @@ AngularQuadratureTriangle(unsigned int in_method,
 }
 
 void chi_math::AngularQuadratureTriangle::
-MakeHarmonicIndices(unsigned int l_max)
+MakeHarmonicIndices(unsigned int scattering_order, int dimension)
 {
-  const int L = static_cast<int>(l_max);
+  const int L = static_cast<int>(scattering_order);
   //Figure out what to do in dimensions other than 2d
   if (m_to_ell_em_map.empty())
   {
@@ -69,7 +69,7 @@ TriangleInit(unsigned int sn)
   //Need to form the harmonics first/ these change based on the method
   //Clear the old m_to_ell mapping and redo it based on the method
   m_to_ell_em_map.clear();
-  MakeHarmonicIndices(sn);
+  MakeHarmonicIndices(sn,0);
   chi_mesh::Vector3 new_omega;
   // grab the gauss points for the z axis, the number of points for GL is twice
   // that of the quadrature

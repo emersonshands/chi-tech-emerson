@@ -44,8 +44,10 @@ void chi_math::AngularQuadratureTriangle::FilterMoments()
 
 void chi_math::AngularQuadratureTriangle::
 BuildDiscreteToMomentOperator
-  ()
+  (unsigned int scattering_order,
+   int dimension)
 {
+  printf("Using the self made d2m");
   if (not d2m_op_built and (method==1 or method==2))
   {
     d2m_op.clear();
@@ -185,9 +187,10 @@ BuildDiscreteToMomentOperator
 
 void chi_math::AngularQuadratureTriangle::
 BuildMomentToDiscreteOperator
-  ()
+  (unsigned int scattering_order,
+   int dimension)
 {
-  if (not d2m_op_built) BuildDiscreteToMomentOperator();
+  if (not d2m_op_built) BuildDiscreteToMomentOperator(0,0);
   // Method 1 and 2 is just the inverse of d2m
   if (method == 1 or method == 2)
   {
