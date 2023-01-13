@@ -9,42 +9,32 @@
 
 chi_math::AngularQuadratureTriangle::
 AngularQuadratureTriangle(unsigned int in_method,
-                          unsigned int sn_in) :
+                          unsigned int in_sn) :
   method(in_method),
-  sn(sn_in),
+  sn(in_sn),
   moments(0)
 {
-  TriangleInit(sn);
+  TriangleInit();
 }
 
 chi_math::AngularQuadratureTriangle::
 AngularQuadratureTriangle(unsigned int in_method,
-                          unsigned int sn_in,
-                          unsigned int inmoments) :
+                          unsigned int in_sn,
+                          unsigned int in_moments) :
   method(in_method),
-  sn(sn_in),
-  moments(inmoments)
+  sn(in_sn),
+  moments(in_moments)
 {
-  TriangleInit(sn);
+  TriangleInit();
 }
 
 void chi_math::AngularQuadratureTriangle::
-MakeHarmonicIndices(unsigned int scattering_order, int dimension)
+TriangleInit()
 {
-  const int L = static_cast<int>(scattering_order);
-  //Figure out what to do in dimensions other than 2d
-  if (m_to_ell_em_map.empty())
-  {
-    for (int ell = 0; ell <= L; ++ell)
-      for (int m = -ell; m <= ell; m += 2)
-        if (ell == L and m >= 0) break;
-        else m_to_ell_em_map.emplace_back(ell, m);
-  }
-}
 
-void chi_math::AngularQuadratureTriangle::
-TriangleInit(unsigned int sn)
-{
+  chi::log.Log0() << "Given the method "
+  << method << "\nGiven sn " << sn;
+
   if (method != 1 and method != 2 and method !=3)
   {
     printf("The method given is not 1, 2, or 3.\n Please reorder your input.\n "
@@ -66,16 +56,11 @@ TriangleInit(unsigned int sn)
            "All values used\n"
            "Given value %i, sn=%i\n",moments,sn);
   }
-  //Need to form the harmonics first/ these change based on the method
-  //Clear the old m_to_ell mapping and redo it based on the method
-  m_to_ell_em_map.clear();
-  MakeHarmonicIndices(sn,0);
   chi_mesh::Vector3 new_omega;
   // grab the gauss points for the z axis, the number of points for GL is twice
   // that of the quadrature
   const auto old_omega = chi_math::QuadratureGaussLegendre(sn);
   // formulate the triangular quadrature
-  //chi_math::PrintVector(old_omega.weights);
 
   int num_div = 1;
   int weightPos =0;
@@ -105,7 +90,10 @@ TriangleInit(unsigned int sn)
       weights.push_back(old_omega.weights[weightPos]/num_div);
       omegas.emplace_back(new_omega);
       abscissae.emplace_back(phi,theta);
-
+      chi::log.Log0()<< "Phi value "<< phi << " Theta value "<<theta;
+      chi::log.Log0()<< "OMEGA x "<< new_omega.x <<
+      " OMEGA Y "<< new_omega.y << " OMEGA Z " << new_omega.z;
+      chi::log.Log0()<< "WEIGHT "<< weights.back();
     }
     weightPos++;
     num_div++;
@@ -132,6 +120,10 @@ TriangleInit(unsigned int sn)
       weights.push_back(weights[l]);
       omegas.emplace_back(new_omega);
       abscissae.emplace_back(phi,theta);
+      chi::log.Log0()<< "Phi value "<< phi << " Theta value "<<theta;
+      chi::log.Log0()<< "OMEGA x "<< new_omega.x <<
+                     " OMEGA Y "<< new_omega.y << " OMEGA Z " << new_omega.z;
+      chi::log.Log0()<< "WEIGHT "<< weights.back();
     }
   }
   //Now we need to call optimize for polar symmetry to normalize

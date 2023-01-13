@@ -2,6 +2,7 @@
 #include <cmath>
 #include "ChiMath/Quadratures/LegendrePoly/legendrepoly.h"
 #include "chi_runtime.h"
+#include "chi_log.h"
 #include "angular_quadrature_triangle.h"
 #include "ChiMath/chi_math.h"
 #include <cassert>
@@ -12,9 +13,6 @@
  */
 double InnerProduct(const VecDbl& f, const VecDbl& g, const VecDbl& wt)
 {
-  assert(!f.empty());
-  assert(!g.empty());
-  assert(!wt.empty());
   size_t fsize = f.size();
   double sum_val = 0.0;
   for (size_t i=0; i<fsize; ++i)
@@ -43,22 +41,61 @@ void chi_math::AngularQuadratureTriangle::FilterMoments()
 }
 
 void chi_math::AngularQuadratureTriangle::
+MakeHarmonicIndices(unsigned int scattering_order, int dimension)
+{
+  int L = static_cast<int>(scattering_order);
+  //We need to limit the scattering order to make sure this doesn't blow up
+  if (L>sn) L = static_cast<int>(sn);
+  if (m_to_ell_em_map.empty())
+  {
+    for (int ell = 0; ell <= L; ++ell)
+      for (int m = -ell; m <= ell; m += 2)
+      {
+        if (ell == L and m >= 0) break;
+        else m_to_ell_em_map.emplace_back(ell, m);
+        chi::log.Log0() << "l " << ell << " and m "<< m << "\n";
+      }
+  }
+}
+
+void chi_math::AngularQuadratureTriangle::
 BuildDiscreteToMomentOperator
   (unsigned int scattering_order,
    int dimension)
 {
-  printf("Using the self made d2m");
-  if (not d2m_op_built and (method==1 or method==2))
+
+  //ALL FOCUS ON METHOD 1 TO ID PROBLEM
+
+  chi::log.Log0() <<
+  "$$$$$$$$$$$$$$$$$$$$$$$$$$\n Using the self made d2m\n$$$$$$$$$$$$$$$$$\n";
+  chi::log.Log0() << "THIS IS SCATTERING ORDER " << scattering_order <<
+  " AND DIMENSIONS " << dimension << "\n";
+  if (d2m_op_built) return;
+  MakeHarmonicIndices(scattering_order,dimension);
+  if (method==1 or method==2)
   {
     d2m_op.clear();
     std::vector<std::vector<double>> cmt;
     unsigned int num_angles = abscissae.size();
     unsigned int num_moms = m_to_ell_em_map.size();
-    for (const auto &ell_em: m_to_ell_em_map)
+    chi::log.Log0() << "This is my number of angles " <<num_angles<<
+    " and number of moments " << num_moms << "\n";
+    //Check to see if the number of moments given for the scattering
+    // order is greater than the quadrature allows
+//    if (num_moms > num_angles)
+//      num_moms = num_angles;
+    chi::log.Log0() << "This is my number of angles " <<num_angles<<
+                      " and number of moments " << num_moms <<
+                      " After truncate\n";
+    //Changed this iteration scheme from the basic class
+    // because the basic class would do the whole D2M matrix based
+    // on the scattering order given and our method doesn't allow that
+    for (size_t mom_pos = 0; mom_pos<num_moms; ++mom_pos)
     {
+      const auto &ell_em =  m_to_ell_em_map[mom_pos];
       std::vector<double> cur_mom;
       cur_mom.reserve(num_angles);
-
+      printf("This is the l %d and m %d \n",ell_em.ell,ell_em.m);
       for (int n = 0; n < num_angles; n++)
       {
         const auto &cur_angle = abscissae[n];
@@ -73,6 +110,8 @@ BuildDiscreteToMomentOperator
       else
         cmt.push_back(cur_mom);
     }
+    //ALL FOCUS ON METHOD 1 TO ID PROBLEM
+
     if (method == 2)
     {
       // solve for the weights
@@ -110,10 +149,11 @@ BuildDiscreteToMomentOperator
   {
     d2m_op.clear();
     unsigned int num_angles = abscissae.size();
+    unsigned int num_moms = 0;
     if (moments!=0 and moments!=sn)
-      unsigned int num_moms = 1 + (moments*3 + moments*moments)/2;
+      num_moms = 1 + (moments*3 + moments*moments)/2;
     else
-      unsigned int num_moms = m_to_ell_em_map.size();
+      num_moms = m_to_ell_em_map.size();
     MatDbl cmt;
     //Make the coefficent matrix
     for (const auto &ell_em: m_to_ell_em_map)
@@ -169,7 +209,7 @@ BuildDiscreteToMomentOperator
     {
       VecDbl temp_d2m;
       VecDbl temp_m2d;
-      for (int k=0; k<ndir;++k)
+      for (int k=0; k<num_moms;++k)
       {
         temp_m2d.emplace_back(cmt_hat[i][k] * ((2.0*i+1)/(4.0*M_PI)));
         temp_d2m.emplace_back(cmt_hat[i][k] * weights[k]);
@@ -181,8 +221,8 @@ BuildDiscreteToMomentOperator
     m2d_op = chi_math::Transpose(holder_m2d);
     d2m_op_built = true;
   }
-  if(moments!=0 and d2m_op_built and m2d_op_built and moments!=sn and method!=3)
-    FilterMoments();
+//  if(moments!=0 and d2m_op_built and m2d_op_built and moments<scattering_order and method!=3)
+//    FilterMoments();
 }
 
 void chi_math::AngularQuadratureTriangle::
@@ -190,7 +230,7 @@ BuildMomentToDiscreteOperator
   (unsigned int scattering_order,
    int dimension)
 {
-  if (not d2m_op_built) BuildDiscreteToMomentOperator(0,0);
+  if (not d2m_op_built) BuildDiscreteToMomentOperator(scattering_order,dimension);
   // Method 1 and 2 is just the inverse of d2m
   if (method == 1 or method == 2)
   {
@@ -199,6 +239,6 @@ BuildMomentToDiscreteOperator
   //The M2D operator has to be built in the D2M build if method 3
   m2d_op_built = true;
   //Now filter by the moment number given
-  if(moments!=0 and d2m_op_built and m2d_op_built and moments!=sn)
-    FilterMoments();
+//  if(moments!=0 and d2m_op_built and m2d_op_built and moments<scattering_order)
+//    FilterMoments();
 }

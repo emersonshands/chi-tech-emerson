@@ -20,13 +20,14 @@ protected:
   const unsigned int moments;
 public:
   explicit
-  AngularQuadratureTriangle(unsigned int in_method,unsigned int sn);
+  AngularQuadratureTriangle(unsigned int in_method,unsigned int in_sn);
   explicit
-  AngularQuadratureTriangle(unsigned int in_method,unsigned int sn,
-                            unsigned int inmoments);
+  AngularQuadratureTriangle(unsigned int in_method,unsigned int in_sn,
+                            unsigned int in_moments);
 protected:
-  void TriangleInit(unsigned int sn);
-  void MakeHarmonicIndices(unsigned int scattering_order, int dimension) override;
+  void TriangleInit();
+  void MakeHarmonicIndices(unsigned int scattering_order, int dimension)
+  override;
 
 public:
   void BuildDiscreteToMomentOperator(unsigned int scattering_order,

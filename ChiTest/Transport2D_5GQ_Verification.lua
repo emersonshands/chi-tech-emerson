@@ -65,13 +65,21 @@ for g=1,num_groups do
 end
 
 --========== ProdQuad
---pquad = chiCreateProductQuadrature(GAUSS_LEGENDRE_CHEBYSHEV,1,1)
+--pquad = chiCreateProductQuadrature(GAUSS_LEGENDRE_CHEBYSHEV,2,2)
 --chiOptimizeAngularQuadratureForPolarSymmetry(pquad,4.0*math.pi)
 --pquad = chiCreateProductQuadratureOperator(pbase,3,4)
-sn = 2
+sn = 4
+scatterOrder = sn
 pquad = chiCreateAngularQuadratureTriangle(1,sn)
---chiPrintD2M(pquad)
---chiPrintM2D(pquad)
+--
+--tab = chiGetTriangleQuadrature(pquad)
+--chiLog(LOG_0, "Checking Values of Quadrature")
+--for pl=1,rawlen(tab) do
+--    chiLog(LOG_0, "Direction " .. tostring(pl))
+--    chiLog(LOG_0, "Weight " .. tostring(tab[pl].weight))
+--    chiLog(LOG_0, "Polar " .. tostring(tab[pl].polar))
+--    chiLog(LOG_0, "Azimu " .. tostring(tab[pl].azimuthal))
+--end
 
 --========== Groupset def
 gs0 = chiLBSCreateGroupset(phys1)
@@ -85,6 +93,8 @@ chiLBSGroupsetSetIterativeMethod(phys1,cur_gs,KRYLOV_GMRES_CYCLES)
 chiLBSGroupsetSetResidualTolerance(phys1,cur_gs,2.606e-10)
 chiLBSGroupsetSetMaxIterations(phys1,cur_gs,300)
 chiLBSGroupsetSetGMRESRestartIntvl(phys1,cur_gs,100)
+
+
 
 --gs1 = chiLBSCreateGroupset(phys1)
 --cur_gs = gs1
@@ -135,7 +145,7 @@ function luaBoundaryFunctionLeft(cell_global_id,
 
             value = normalVal
             --if (phi_theta.phi<1.57079632679 or phi_theta.phi>4.71238898038) then
-            --if (phi_theta.phi<1.57079632679 and phi_theta.phi>0) then
+            ----if (phi_theta.phi<1.57079632679 and phi_theta.phi>0) then
             --    value = normalVal
             --end
 
@@ -268,8 +278,9 @@ chiLBSSetProperty(phys1,BOUNDARY_CONDITION,XMIN,
 --        "luaBoundaryFunctionBottom");
 
 chiLBSSetProperty(phys1,DISCRETIZATION_METHOD,PWLD)
-chiLBSSetProperty(phys1,SCATTERING_ORDER,3)
+chiLBSSetProperty(phys1,SCATTERING_ORDER,scatterOrder)
 chiLBSSetProperty(phys1,SAVE_ANGULAR_FLUX,true)
+
 
 --############################################### Initialize and Execute Solver
 chiSolverInitialize(phys1)
@@ -287,7 +298,7 @@ chiFFInterpolationInitialize(slice2)
 chiFFInterpolationExecute(slice2)
 
 --############################################### Exports
-if not master_export == nil then
+if master_export == nil then
     chiFFInterpolationExportPython(slice2)
 end
 
@@ -297,17 +308,21 @@ leakage2 = chiLBSComputeLeakage(phys1, gs0, 2)
 leakage3 = chiLBSComputeLeakage(phys1, gs0, 3)
 balance = chiLBSComputeBalance(phys1)
 
-print("XMax")
+chiPrintD2M(pquad)
+chiPrintM2D(pquad)
+chiCheckIdentity(pquad)
+
+chiLog(LOG_0,"XMax")
 chiLog(LOG_0,tostring(leakage0[1]))
-print("XMin")
+chiLog(LOG_0,"XMin")
 chiLog(LOG_0,tostring(leakage1[1]))
-print("YMax")
+chiLog(LOG_0,"YMax")
 chiLog(LOG_0,tostring(leakage2[1]))
-print("YMin")
+chiLog(LOG_0,"Ymin")
 chiLog(LOG_0, tostring(leakage3[1]))
 
 --############################################### Plots
-if (chi_location_id == 0 and not master_export == nil) then
+if (chi_location_id == 0 and  master_export == nil) then
     local handle = io.popen("python3 ZPFFI00.py")
 end
 
@@ -391,3 +406,74 @@ end
 --[0]   Integrated scalar flux   = 3.62760e+01
 --[0]   Net Gain/Loss            = 3.42837e-13
 --[0]   Net Gain/Loss normalized = 9.45079e-15
+
+
+--Product s2
+--Balance table:
+--[0]   Absorption rate          = 3.41816e+01
+--[0]   Production rate          = 0.00000e+00
+--[0]   In-flow rate             = 3.62760e+01
+--[0]   Out-flow rate            = 2.09440e+00
+--[0]   Integrated scalar flux   = 3.62760e+01
+--[0]   Net Gain/Loss            = 3.49942e-13
+--[0]   Net Gain/Loss normalized = 9.64667e-15
+--[0]
+--[0]  ********** Done computing balance
+--XMax
+--[0]  5.3046316310033e-09
+--XMin
+--[0]  0.0
+--YMax
+--[0]  1.0471975167651
+--YMin
+--[0]  1.0471975167651
+--[0]
+
+--Triangle s2-
+--[0]  Balance table:
+--[0]   Absorption rate          = 3.41816e+01
+--[0]   Production rate          = 0.00000e+00
+--[0]   In-flow rate             = 3.62760e+01
+--[0]   Out-flow rate            = 2.09440e+00
+--[0]   Integrated scalar flux   = 3.62760e+01
+--[0]   Net Gain/Loss            = 3.42837e-13
+--[0]   Net Gain/Loss normalized = 9.45079e-15
+--[0]
+--[0]  ********** Done computing balance
+--[0]  Now printing the D2M Matrix
+--[0]  3.141593 3.141593 3.141593 3.141593
+--[0]  1.813799 1.813799 -1.813799 -1.813799
+--[0]  1.813799 -1.813799 -1.813799 1.813799
+--[0]  1.813799 -1.813799 1.813799 -1.813799
+--[0]  Printing weights
+--[0]  3.14159
+--[0]  3.14159
+--[0]  3.14159
+--[0]  3.14159
+--[0]  Weight sum 12.5664
+--[0]  Integrating Zi
+--[0]  7.2552
+--[0]  Now printing the M2D Matrix
+--[0]  0.079577 0.137832 0.137832 0.137832
+--[0]  0.079577 0.137832 -0.137832 -0.137832
+--[0]  0.079577 -0.137832 -0.137832 0.137832
+--[0]  0.079577 -0.137832 0.137832 -0.137832
+--XMax
+--[0]  5.3046316310034e-09
+--XMin
+--[0]  0.0
+--YMax
+--[0]  1.0471975167651
+--YMin
+--[0]  1.0471975167651
+
+
+--Triangular Pure iso-
+--Balance table:
+--[0]   Absorption rate          = 2.93517e+01
+--[0]   Production rate          = 0.00000e+00
+--[0]   In-flow rate             = 3.30308e+01
+--[0]   Out-flow rate            = 1.42501e+01
+--[0]   Integrated scalar flux   = 3.30308e+01
+--[0]   Net Gain/Loss            = -1.05710e+01
+--[0]   Net Gain/Loss normalized = -3.20035e-01
