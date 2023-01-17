@@ -5,6 +5,8 @@
 #include "ChiMath/Quadratures/angular_product_quadrature.h"
 #include "ChiMath/Quadratures/LegendrePoly/legendrepoly.h"
 #include "ChiMath/chi_math_04_Matrix_operations.h"
+#include "ChiMath/Quadratures/angular_quadrature_base.h"
+
 namespace chi_math
 {
   class ProductQuadratureOp;
@@ -12,7 +14,6 @@ namespace chi_math
 class chi_math::ProductQuadratureOp : public chi_math::ProductQuadrature
 {
 protected:
-
   chi_math::ProductQuadrature quad;
   const int method;
   int sn;
@@ -21,15 +22,16 @@ private:
 void CheckInputs();
 public:
   ProductQuadratureOp(const ProductQuadrature &inquad,
-                     int inmethod, int order);
+                     int inmethod, int inorder);
   ProductQuadratureOp(const ProductQuadrature& inquad,
-                      int inmethod, int order, int moments);
+                      int inmethod, int inorder, int inmoments);
 
   double InnerProduct(const VecDbl& f, const VecDbl& g, const VecDbl& wt);
-  void MakeHarmonicIndices();
-  void BuildDiscreteToMomentOperator();
-  void BuildMomentToDiscreteOperator();
-  // Had to match up to dr. morel's symmetry;
+  void MakeHarmonicIndices(unsigned int scattering_order, int dimension) override;
+  void BuildDiscreteToMomentOperator(unsigned int scattering_order,
+                                     int dimension) override;
+  void BuildMomentToDiscreteOperator(unsigned int scattering_order,
+                                     int dimension) override;
 //  void OptimizeForPolarSymmetry(double normalization) override;
   void FilterMoments();
 };

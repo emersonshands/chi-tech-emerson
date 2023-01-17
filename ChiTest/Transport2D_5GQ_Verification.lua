@@ -65,12 +65,16 @@ for g=1,num_groups do
 end
 
 --========== ProdQuad
---pquad = chiCreateProductQuadrature(GAUSS_LEGENDRE_CHEBYSHEV,2,2)
---chiOptimizeAngularQuadratureForPolarSymmetry(pquad,4.0*math.pi)
---pquad = chiCreateProductQuadratureOperator(pbase,3,4)
-sn = 4
-scatterOrder = sn
-pquad = chiCreateAngularQuadratureTriangle(1,sn)
+sn = 2
+method = 1
+
+scatterOrder = 2*(sn-1)
+pquad = chiCreateProductQuadrature(GAUSS_LEGENDRE_CHEBYSHEV,1,1)
+chiOptimizeAngularQuadratureForPolarSymmetry(pquad,4.0*math.pi)
+pq2 = chiCreateProductQuadratureOperator(pquad,method,sn)
+
+--scatterOrder = sn
+--pquad = chiCreateAngularQuadratureTriangle(method,sn)
 --
 --tab = chiGetTriangleQuadrature(pquad)
 --chiLog(LOG_0, "Checking Values of Quadrature")
@@ -85,7 +89,7 @@ pquad = chiCreateAngularQuadratureTriangle(1,sn)
 gs0 = chiLBSCreateGroupset(phys1)
 cur_gs = gs0
 chiLBSGroupsetAddGroups(phys1,cur_gs,0,num_groups-1)
-chiLBSGroupsetSetQuadrature(phys1,cur_gs,pquad)
+chiLBSGroupsetSetQuadrature(phys1,cur_gs,pq2)
 chiLBSGroupsetSetAngleAggregationType(phys1,cur_gs,LBSGroupset.ANGLE_AGG_SINGLE)
 chiLBSGroupsetSetAngleAggDiv(phys1,cur_gs,1)
 chiLBSGroupsetSetGroupSubsets(phys1,cur_gs,1)
@@ -308,9 +312,9 @@ leakage2 = chiLBSComputeLeakage(phys1, gs0, 2)
 leakage3 = chiLBSComputeLeakage(phys1, gs0, 3)
 balance = chiLBSComputeBalance(phys1)
 
-chiPrintD2M(pquad)
-chiPrintM2D(pquad)
-chiCheckIdentity(pquad)
+--chiPrintD2M(pquad)
+--chiPrintM2D(pquad)
+--chiCheckIdentity(pquad)
 
 chiLog(LOG_0,"XMax")
 chiLog(LOG_0,tostring(leakage0[1]))
@@ -477,3 +481,44 @@ end
 --[0]   Integrated scalar flux   = 3.30308e+01
 --[0]   Net Gain/Loss            = -1.05710e+01
 --[0]   Net Gain/Loss normalized = -3.20035e-01
+
+
+--Product s2
+--[0]  Balance table:
+--[0]   Absorption rate          = 3.40513e+01
+--[0]   Production rate          = 0.00000e+00
+--[0]   In-flow rate             = 3.62760e+01
+--[0]   Out-flow rate            = 2.22471e+00
+--[0]   Integrated scalar flux   = 3.62760e+01
+--[0]   Net Gain/Loss            = -3.04309e-10
+--[0]   Net Gain/Loss normalized = -8.38873e-12
+--[0]
+--[0]  ********** Done computing balance
+--[0]  XMax
+--[0]  -7.5109401619598e-06
+--[0]  XMin
+--[0]  0.10925363356841
+--[0]  YMax
+--[0]  1.0577296028346
+--[0]  Ymin
+--[0]  1.0577296028346
+
+--Product Altered s2
+--[0]  Balance table:
+--[0]   Absorption rate          = 5.26195e+01
+--[0]   Production rate          = 0.00000e+00
+--[0]   In-flow rate             = 3.62760e+01
+--[0]   Out-flow rate            = 1.13229e+01
+--[0]   Integrated scalar flux   = 3.62760e+01
+--[0]   Net Gain/Loss            = -2.76664e+01
+--[0]   Net Gain/Loss normalized = -7.62665e-01
+--[0]
+--[0]  ********** Done computing balance
+--[0]  XMax
+--[0]  1.5697930781409e-05
+--[0]  XMin
+--[0]  8.607448104784
+--[0]  YMax
+--[0]  0.97102330713801
+--[0]  Ymin
+--[0]  1.7444561048625
