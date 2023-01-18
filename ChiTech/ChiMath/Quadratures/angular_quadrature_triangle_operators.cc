@@ -112,117 +112,122 @@ BuildDiscreteToMomentOperator
       else
         cmt.push_back(cur_mom);
     }
-    //ALL FOCUS ON METHOD 1 TO ID PROBLEM
 
-//    if (method == 2)
-//    {
-//      // solve for the weights
-//      //change this to change normalization of the weights
-//      double normalization = 4.0*M_PI;
-//      std::vector<double> wt = {normalization};
-//      for(size_t i = 1; i<weights.size(); ++i)
-//        wt.emplace_back(0.0);
-//      auto invt = chi_math::Inverse(cmt);
-//      auto new_weights = chi_math::MatMul(invt,wt);
-//      auto g = chi_math::GaussEliminationPivot(cmt,wt);
-//      new_weights = chi_math::GaussEliminationPivot(cmt,wt);
-//      weights = new_weights;
-//      for (const auto &ell_em: m_to_ell_em_map)
-//      {
-//        std::vector<double> cur_mom;
-//        cur_mom.reserve(num_angles);
-//
-//        for (int n = 0; n < num_angles; n++)
-//        {
-//          const auto &cur_angle = abscissae[n];
-//          double value =chi_math::Ylm(ell_em.ell, ell_em.m,
-//                                      cur_angle.phi,
-//                                      cur_angle.theta);
-//          double w = weights[n];
-//          cur_mom.push_back(value*w);
-//        }
-//        d2m_op.push_back(cur_mom);
-//      }
-//    }
+    if (method == 2)
+    {
+      // solve for the weights
+      //change this to change normalization of the weights
+      double normalization = 4.0*M_PI;
+      std::vector<double> wt = {normalization};
+      for(size_t i = 1; i<weights.size(); ++i)
+        wt.emplace_back(0.0);
+      auto invt = chi_math::Inverse(cmt);
+//      chi::log.Log0() << "THE WT \n";
+//      chi_math::PrintVector(wt);
+//      chi::log.Log0() << "The original cmt \n";
+//      chi_math::PrintMatrix(cmt);
+//      chi::log.Log0() << "The inverse cmt \n";
+//      chi_math::PrintMatrix(invt);
+      auto new_weights = chi_math::MatMul(invt,wt);
+      weights = new_weights;
+      for (const auto &ell_em: m_to_ell_em_map)
+      {
+        std::vector<double> cur_mom;
+        cur_mom.reserve(num_angles);
+
+        for (int n = 0; n < num_angles; n++)
+        {
+          const auto &cur_angle = abscissae[n];
+          double value =chi_math::Ylm(ell_em.ell, ell_em.m,
+                                      cur_angle.phi,
+                                      cur_angle.theta);
+          double w = weights[n];
+          cur_mom.push_back(value*w);
+        }
+        d2m_op.push_back(cur_mom);
+      }
+    }
     d2m_op_built = true;
   }
-    //Method 3 using grah-schmidtt orthogonalization
-//  else if(not d2m_op_built and method ==3)
-//  {
-//    d2m_op.clear();
-//    unsigned int num_angles = abscissae.size();
-//    unsigned int num_moms = 0;
-//    if (moments!=0 and moments!=sn)
-//      num_moms = 1 + (moments*3 + moments*moments)/2;
-//    else
-//      num_moms = m_to_ell_em_map.size();
-//    MatDbl cmt;
-//    //Make the coefficent matrix
-//    for (const auto &ell_em: m_to_ell_em_map)
-//    {
-//      std::vector<double> cur_mom;
-//      cur_mom.reserve(num_angles);
-//
-//      for (int n = 0; n < num_angles; n++)
-//      {
-//        const auto &cur_angle = abscissae[n];
-//        double value =chi_math::Ylm(ell_em.ell, ell_em.m,
-//                                    cur_angle.phi,
-//                                    cur_angle.theta);
-//        double w = weights[n];
-//        cur_mom.push_back(value*w);
-//      }
-//      cmt.push_back(cur_mom);
-//    }
-//    //Make the holder for the altered coefficients
-//    MatDbl cmt_hat=cmt;
-//    size_t ndir = cmt[0].size();
-//    for (size_t i = 1;i<ndir;++i)
-//    {
-//      VecDbl current_vec = cmt[i];
-//      VecDbl sum_val(ndir);
-//      //Do GS- and go through every previous row to get the new row
-//      for (size_t j = 0; j<i; ++j)
-//      {
-//        VecDbl previous_vec_hat = cmt_hat[j];
-//        double multiplier = InnerProduct(previous_vec_hat,current_vec,weights)
-//                            / InnerProduct(previous_vec_hat,
-//                                           previous_vec_hat,weights);
-//        for (int o=0;o<ndir;++o)
-//          previous_vec_hat[o] *= multiplier;
-//        sum_val = previous_vec_hat+sum_val;
-//      }
-//      //Set the new row
-//      cmt_hat[i] = cmt[i] - sum_val;
-//    }
-//
-//    //Now to normalize the values
-//    for (int i = 0; i<ndir;++i)
-//    {
-//      double normal = (4.0*M_PI)/(2.0*i+1.0);
-//      double multiplier = sqrt(normal /
-//                               InnerProduct(cmt_hat[i],cmt_hat[i],weights));
-//      for (int k=0; k<ndir;++k)
-//        cmt_hat[i][k] *= multiplier;
-//    }
-//    //Make the d2m matrix and m2d matrix
-//    MatDbl holder_m2d;
-//    for (int i = 0; i<ndir;++i)
-//    {
-//      VecDbl temp_d2m;
-//      VecDbl temp_m2d;
-//      for (int k=0; k<num_moms;++k)
-//      {
-//        temp_m2d.emplace_back(cmt_hat[i][k] * ((2.0*i+1)/(4.0*M_PI)));
-//        temp_d2m.emplace_back(cmt_hat[i][k] * weights[k]);
-//      }
-//      d2m_op.push_back(temp_d2m);
-//      holder_m2d.push_back(temp_m2d);
-//    }
-//    //now we need to transpose the temporary m2d to get the actual m2d
-//    m2d_op = chi_math::Transpose(holder_m2d);
-//    d2m_op_built = true;
-//  }
+//    Method 3 using grah-schmidtt orthogonalization
+  else if(not d2m_op_built and method ==3)
+  {
+    d2m_op.clear();
+    unsigned int num_angles = abscissae.size();
+    unsigned int num_moms = 0;
+    if (moments!=0 and moments!=sn)
+      num_moms = 1 + (moments*3 + moments*moments)/2;
+    else
+      num_moms = m_to_ell_em_map.size();
+    MatDbl cmt;
+    //Make the coefficent matrix
+    for (const auto &ell_em: m_to_ell_em_map)
+    {
+      std::vector<double> cur_mom;
+      cur_mom.reserve(num_angles);
+
+      for (int n = 0; n < num_angles; n++)
+      {
+        const auto &cur_angle = abscissae[n];
+        double value =chi_math::Ylm(ell_em.ell, ell_em.m,
+                                    cur_angle.phi,
+                                    cur_angle.theta);
+        double w = weights[n];
+        cur_mom.push_back(value*w);
+      }
+      cmt.push_back(cur_mom);
+    }
+    //Make the holder for the altered coefficients
+    MatDbl cmt_hat=cmt;
+    size_t ndir = cmt[0].size();
+    for (size_t i = 1;i<ndir;++i)
+    {
+      VecDbl current_vec = cmt[i];
+      VecDbl sum_val(ndir);
+      //Do GS- and go through every previous row to get the new row
+      for (size_t j = 0; j<i; ++j)
+      {
+        VecDbl previous_vec_hat = cmt_hat[j];
+        double multiplier = InnerProduct(previous_vec_hat,current_vec,weights)
+                            / InnerProduct(previous_vec_hat,
+                                           previous_vec_hat,weights);
+        for (int o=0;o<ndir;++o)
+          previous_vec_hat[o] *= multiplier;
+        sum_val = previous_vec_hat+sum_val;
+      }
+      //Set the new row
+      cmt_hat[i] = cmt[i] - sum_val;
+    }
+
+    //Now to normalize the values
+    for (int i = 0; i<ndir;++i)
+    {
+      double normal = (4.0*M_PI)/(2.0*i+1.0);
+      double multiplier = sqrt(normal /
+                               InnerProduct(cmt_hat[i],cmt_hat[i],weights));
+      for (int k=0; k<ndir;++k)
+        cmt_hat[i][k] *= multiplier;
+    }
+    //Make the d2m matrix and m2d matrix
+    MatDbl holder_m2d;
+    for (int i = 0; i<ndir;++i)
+    {
+      VecDbl temp_d2m;
+      VecDbl temp_m2d;
+      for (int k=0; k<num_moms;++k)
+      {
+        temp_m2d.emplace_back(cmt_hat[i][k] * ((2.0*i+1)/(4.0*M_PI)));
+        temp_d2m.emplace_back(cmt_hat[i][k] * weights[k]);
+      }
+      d2m_op.push_back(temp_d2m);
+      holder_m2d.push_back(temp_m2d);
+    }
+    //now we need to transpose the temporary m2d to get the actual m2d
+//    m2d_op = chi_math::Transpose(holder_m2d); This is the normal method but due to a bug this must be entered without transpose
+    m2d_op = holder_m2d;
+    d2m_op_built = true;
+  }
+
 //  if(moments!=0 and d2m_op_built and m2d_op_built and moments<scattering_order and method!=3)
 //    FilterMoments();
 }
@@ -237,11 +242,17 @@ BuildMomentToDiscreteOperator
   if (m2d_op_built) return;
   if (method == 1 or method == 2)
   {
-    m2d_op = chi_math::Inverse(d2m_op);
+    m2d_op = chi_math::Transpose(chi_math::Inverse(d2m_op));
   }
   //The M2D operator has to be built in the D2M build if method 3
   m2d_op_built = true;
   //Now filter by the moment number given
 //  if(moments!=0 and d2m_op_built and m2d_op_built and moments<scattering_order)
 //    FilterMoments();
+  chi::log.Log0() << "The d2m op \n";
+  chi_math::PrintMatrix(d2m_op);
+  chi::log.Log0() << "The m2d op \n";
+  chi_math::PrintMatrix(m2d_op);
+  chi::log.Log0() << "The m2d*d2m op \n";
+  chi_math::PrintMatrix(chi_math::MatMul(chi_math::Transpose(m2d_op),d2m_op));
 }

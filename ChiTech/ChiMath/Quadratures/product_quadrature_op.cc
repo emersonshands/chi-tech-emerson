@@ -294,19 +294,12 @@ void chi_math::ProductQuadratureOp::BuildMomentToDiscreteOperator
 {
   if (not d2m_op_built) BuildDiscreteToMomentOperator(scattering_order,
                                                       dimension);
-//  chi::Exit(0);
   // Method 1 and 2 is just the inverse of d2m
   if (method == 1 or method == 2)
   {
     m2d_op = chi_math::Transpose(chi_math::Inverse(d2m_op));
 
   }
-  weights = d2m_op[0];
-  chi_math::PrintMatrix(d2m_op);
-  chi_math::PrintMatrix(m2d_op);
-  auto DM = chi_math::MatMul(d2m_op,m2d_op);
-  chi_math::PrintMatrix(DM);
-//  chi::Exit(0);
   //The M2D operator has to be built in the D2M build if method 3
   m2d_op_built = true;
   //Now filter by the moment number given
