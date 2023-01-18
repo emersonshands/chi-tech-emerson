@@ -141,50 +141,27 @@ double chi_math::ProductQuadratureOp::InnerProduct(const VecDbl& f,
 
 
 void chi_math::ProductQuadratureOp::MakeHarmonicIndices
-(unsigned int scattering_order,  int dimension)
+(unsigned int,  int dimension)
 {
-  const int nquad = static_cast<int>(sn);
+  printf("MAKING CUSTOM HARMONICS\n");
+  const int nquad = sn;
   int Lmax = 2 * (nquad - 1);
-  printf("Given nquad %d\nGiven Lmax %d\nGiven scattering order %d\n",
-         nquad,Lmax,scattering_order);
-  if (scattering_order > Lmax and scattering_order>0)
-    chi::log.Log0Error() << "Scattering order is not 2(sn-1)";
-  else
-    Lmax = static_cast<int>(scattering_order);
+  m_to_ell_em_map.clear();
   for (int ell = 0; ell <= Lmax; ++ell)
     for (int m = -ell; m <= ell; m += 1)
     {
       if (ell >= nquad)
       {
-        if
-          ( abs(m)>ell - nquad and abs(m)<=nquad and m <nquad
-           and (ell + abs(m)) % 2 == 0)
+        if (abs(m)>ell - nquad and abs(m)<=nquad and m <nquad
+            and (ell + abs(m)) % 2 == 0)
         {
           m_to_ell_em_map.emplace_back(ell, m);
           printf("Harmonics found l=%i m=%i \n", ell, m);
         } else
           continue;
       }
-//      else
-//        if(ell>nquad)
-//      {
-//        if
-//          (ell==5 and abs(m)==3
-//           and (ell+abs(m))%2==0)
-//        {
-//          m_to_ell_em_map.emplace_back(ell, m);
-//          printf("Harmonics found l=%i m=%i \n", ell, m);
-//        }
-//        if
-//          (ell==6 and m==-4
-//           and (ell+abs(m))%2==0)
-//        {
-//          m_to_ell_em_map.emplace_back(ell, m);
-//          printf("Harmonics found l=%i m=%i \n", ell, m);
-//        }
-//      }
       else
-        if((ell+abs(m))%2==0)
+        if ((ell+abs(m))%2==0)
       {
         m_to_ell_em_map.emplace_back(ell, m);
         printf("Harmonics found l=%i m=%i \n",ell,m);
@@ -217,41 +194,8 @@ void chi_math::ProductQuadratureOp::BuildDiscreteToMomentOperator
         double w = weights[n];
         cur_mom.push_back(value*w);
       }
-      if (method ==1)
-        d2m_op.push_back(cur_mom);
-      else
-        cmt.push_back(cur_mom);
+      d2m_op.push_back(cur_mom);
     }
-//    if (method == 2)
-//    {
-//      // solve for the weights
-//      //change this to change normalization of the weights
-//      double normalization = 4.0*M_PI;
-//      std::vector<double> wt = {normalization};
-//      for(size_t i = 1; i<weights.size(); ++i)
-//        wt.emplace_back(0.0);
-//      auto invt = chi_math::Inverse(cmt);
-//      auto new_weights = chi_math::MatMul(invt,wt);
-//      auto g = chi_math::GaussEliminationPivot(cmt,wt);
-//      new_weights = chi_math::GaussEliminationPivot(cmt,wt);
-//      weights = new_weights;
-//      for (const auto &ell_em: m_to_ell_em_map)
-//      {
-//        std::vector<double> cur_mom;
-//        cur_mom.reserve(num_angles);
-//
-//        for (int n = 0; n < num_angles; n++)
-//        {
-//          const auto &cur_angle = abscissae[n];
-//          double value =chi_math::Ylm(ell_em.ell, ell_em.m,
-//                                      cur_angle.phi,
-//                                      cur_angle.theta);
-//          double w = weights[n];
-//          cur_mom.push_back(value*w);
-//        }
-//        d2m_op.push_back(cur_mom);
-//      }
-//    }
     d2m_op_built = true;
   }
     //Method 3 using GS orthogonalization
@@ -350,11 +294,19 @@ void chi_math::ProductQuadratureOp::BuildMomentToDiscreteOperator
 {
   if (not d2m_op_built) BuildDiscreteToMomentOperator(scattering_order,
                                                       dimension);
+//  chi::Exit(0);
   // Method 1 and 2 is just the inverse of d2m
   if (method == 1 or method == 2)
   {
-    m2d_op = chi_math::Inverse(d2m_op);
+    m2d_op = chi_math::Transpose(chi_math::Inverse(d2m_op));
+
   }
+  weights = d2m_op[0];
+  chi_math::PrintMatrix(d2m_op);
+  chi_math::PrintMatrix(m2d_op);
+  auto DM = chi_math::MatMul(d2m_op,m2d_op);
+  chi_math::PrintMatrix(DM);
+//  chi::Exit(0);
   //The M2D operator has to be built in the D2M build if method 3
   m2d_op_built = true;
   //Now filter by the moment number given

@@ -234,6 +234,7 @@ BuildMomentToDiscreteOperator
 {
   if (not d2m_op_built) BuildDiscreteToMomentOperator(scattering_order,dimension);
   // Method 1 and 2 is just the inverse of d2m
+  if (m2d_op_built) return;
   if (method == 1 or method == 2)
   {
     m2d_op = chi_math::Inverse(d2m_op);

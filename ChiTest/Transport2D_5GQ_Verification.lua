@@ -71,7 +71,16 @@ method = 1
 scatterOrder = 2*(sn-1)
 pquad = chiCreateProductQuadrature(GAUSS_LEGENDRE_CHEBYSHEV,1,1)
 chiOptimizeAngularQuadratureForPolarSymmetry(pquad,4.0*math.pi)
-pq2 = chiCreateProductQuadratureOperator(pquad,method,sn)
+--pq2 = chiCreateProductQuadratureOperator(pquad,method,sn)
+
+tab = chiGetProductQuadrature(pquad)
+chiLog(LOG_0, "Checking Values of Quadrature")
+for pl=1,rawlen(tab) do
+    chiLog(LOG_0, "Direction " .. tostring(pl))
+    chiLog(LOG_0, "Weight " .. tostring(tab[pl].weight))
+    chiLog(LOG_0, "Polar " .. tostring(tab[pl].polar))
+    chiLog(LOG_0, "Azimu " .. tostring(tab[pl].azimuthal))
+end
 
 --scatterOrder = sn
 --pquad = chiCreateAngularQuadratureTriangle(method,sn)
@@ -89,7 +98,7 @@ pq2 = chiCreateProductQuadratureOperator(pquad,method,sn)
 gs0 = chiLBSCreateGroupset(phys1)
 cur_gs = gs0
 chiLBSGroupsetAddGroups(phys1,cur_gs,0,num_groups-1)
-chiLBSGroupsetSetQuadrature(phys1,cur_gs,pq2)
+chiLBSGroupsetSetQuadrature(phys1,cur_gs,pquad)
 chiLBSGroupsetSetAngleAggregationType(phys1,cur_gs,LBSGroupset.ANGLE_AGG_SINGLE)
 chiLBSGroupsetSetAngleAggDiv(phys1,cur_gs,1)
 chiLBSGroupsetSetGroupSubsets(phys1,cur_gs,1)
@@ -326,7 +335,7 @@ chiLog(LOG_0,"Ymin")
 chiLog(LOG_0, tostring(leakage3[1]))
 
 --############################################### Plots
-if (chi_location_id == 0 and  master_export == nil) then
+if (chi_location_id == 0 and not master_export == nil) then
     local handle = io.popen("python3 ZPFFI00.py")
 end
 
@@ -522,3 +531,23 @@ end
 --[0]  0.97102330713801
 --[0]  Ymin
 --[0]  1.7444561048625
+
+--Product op s2-
+--[0]  Balance table:
+--[0]   Absorption rate          = 3.41816e+01
+--[0]   Production rate          = 0.00000e+00
+--[0]   In-flow rate             = 3.62760e+01
+--[0]   Out-flow rate            = 2.09440e+00
+--[0]   Integrated scalar flux   = 3.62760e+01
+--[0]   Net Gain/Loss            = 7.13111e-10
+--[0]   Net Gain/Loss normalized = 1.96579e-11
+--[0]
+--[0]  ********** Done computing balance
+--[0]  XMax
+--[0]  5.2463730136767e-09
+--[0]  XMin
+--[0]  -6.8234811748773e-16
+--[0]  YMax
+--[0]  1.0471975165426
+--[0]  Ymin
+--[0]  1.0471975165426
