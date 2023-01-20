@@ -65,20 +65,23 @@ for g=1,num_groups do
 end
 
 --========== ProdQuad
-sn = 2
-method = 3
+sn = 4
+method = 1
 
 --scatterOrder = 2*(sn-1)
---pquad = chiCreateProductQuadrature(GAUSS_LEGENDRE_CHEBYSHEV,1,1)
+--pquad = chiCreateProductQuadrature(GAUSS_LEGENDRE_CHEBYSHEV,2,2)
 --chiOptimizeAngularQuadratureForPolarSymmetry(pquad,4.0*math.pi)
 --pq2 = chiCreateProductQuadratureOperator(pquad,method,sn)
-
---tab = chiGetProductQuadrature(pquad)
+--
+--tab = chiGetProductQuadrature(pq2)
 --chiLog(LOG_0, "Checking Values of Quadrature")
+--weights = {}
 --for pl=1,rawlen(tab) do
 --    chiLog(LOG_0, "Direction " .. tostring(pl))
 --    chiLog(LOG_0, "Weight " .. tostring(tab[pl].weight))
 --    chiLog(LOG_0, "Polar " .. tostring(tab[pl].polar))
+--    chiLog(LOG_0, "XCos " .. tostring(math.sin(tab[pl].polar)*math.cos(tab[pl].azimuthal)*tab[pl].weight))
+--    weights[#weights + 1] = tab[pl].weight
 --    chiLog(LOG_0, "Azimu " .. tostring(tab[pl].azimuthal))
 --end
 
@@ -151,25 +154,33 @@ function luaBoundaryFunctionLeft(cell_global_id,
     dof_count = 0
     anglePass = 0
     normalVal = 1.0
+    sum = 0
     for ni=1,num_angles do
+        --print("Sum " .. tostring(sum))
         omega = quadrature_angle_vectors[ni]
         phi_theta = quadrature_phi_theta_angles[ni]
         indexQ = quadrature_angle_indices[ni]+1
+        --print("Current Index " .. tostring(indexQ))
         weightCurrent = weights[indexQ]
-        --print("Current Phi " .. phi_theta.phi*180/math.pi)
         --print("Current weight " .. tostring(weightCurrent) .. " Current index " .. tostring(indexQ))
+        --print("Current Phi " .. tostring(phi_theta.phi*180/math.pi))
         for gi=1,num_groups do
             g = group_indices[gi]
 
             value = 0.0
-            dot = math.cos(phi_theta.phi)*normal.x
-            if ( dot < 0 and omega.y > 0) then
-                value = normalVal/math.abs(dot)/weightCurrent
+            if ( omega.x > 0 and omega.y > 0 and omega.z >0) then
+                value = 1.0
+                sum = sum + omega.x*weightCurrent
             end
-            --print("Used Value " .. tostring(value))
+            --print("Used Value " .. tostring(value) .. " Dot product " .. tostring(dot))
             dof_count = dof_count + 1
             psi[dof_count] = value
+            --print("Sum " .. tostring(sum))
         end
+    end
+    for angl=1,dof_count do
+        psi[angl] = psi[angl]/sum/10
+        --print("psi value " .. tostring(psi[angl]))
     end
     return psi
 end

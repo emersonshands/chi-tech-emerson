@@ -130,3 +130,106 @@ TriangleInit()
   // the weights to 4pi to correctly integrate over the sphere
   chi_math::AngularQuadrature::OptimizeForPolarSymmetry(4.0*M_PI);
 }
+//--S4 Product JAN p0
+//[0]  Balance table:
+//[0]   Absorption rate          = 4.60886e-01
+//[0]   Production rate          = 0.00000e+00
+//[0]   In-flow rate             = 1.00000e+00
+//[0]   Out-flow rate            = 5.39114e-01
+//[0]   Integrated scalar flux   = 1.00000e+00
+//[0]   Net Gain/Loss            = 1.73195e-12
+//[0]   Net Gain/Loss normalized = 1.73195e-12
+//                                 [0]
+//                                 [0]  ********** Done computing balance
+//[0]  XMax
+//[0]  0.0072069542459793
+//[0]  XMin
+//[0]  0.33086004584623
+//[0]  YMax
+//[0]  0.15131901513752
+//[0]  Ymin
+//[0]  0.049727744282467
+
+
+//--s2 product JAN
+//[0]  Balance table:
+//[0]   Absorption rate          = 4.28510e-01
+//[0]   Production rate          = 0.00000e+00
+//[0]   In-flow rate             = 1.00000e+00
+//[0]   Out-flow rate            = 5.71490e-01
+//[0]   Integrated scalar flux   = 1.00000e+00
+//[0]   Net Gain/Loss            = -3.85219e-11
+//[0]   Net Gain/Loss normalized = -3.85219e-11
+//[0]
+//[0]  ********** Done computing balance
+//[0]  XMax
+//[0]  0.0035282501384168
+//[0]  XMin
+//[0]  0.35647061065017
+//[0]  YMax
+//[0]  0.17163425902382
+//[0]  Ymin
+//[0]  0.039856762456773
+//[0]
+
+
+//p1 --JAN S4
+//[0]  Balance table:
+//[0]   Absorption rate          = 4.63607e-01
+//[0]   Production rate          = 0.00000e+00
+//[0]   In-flow rate             = 1.00000e+00
+//[0]   Out-flow rate            = 5.36393e-01
+//[0]   Integrated scalar flux   = 1.00000e+00
+//[0]   Net Gain/Loss            = 3.09568e-11
+//[0]   Net Gain/Loss normalized = 3.09568e-11
+//                                 [0]
+//                                 [0]  ********** Done computing balance
+//[0]  XMax
+//[0]  0.0060785969814323
+//[0]  XMin
+//[0]  0.32154187484683
+//[0]  YMax
+//[0]  0.14213211214103
+//[0]  Ymin
+//[0]  0.066640728697553
+
+
+//P1 JAN S8
+//[0]  Balance table:
+//[0]   Absorption rate          = 4.72729e-01
+//[0]   Production rate          = 0.00000e+00
+//[0]   In-flow rate             = 1.00000e+00
+//[0]   Out-flow rate            = 5.27271e-01
+//[0]   Integrated scalar flux   = 1.00000e+00
+//[0]   Net Gain/Loss            = 4.20567e-11
+//[0]   Net Gain/Loss normalized = 4.20567e-11
+//                                 [0]
+//                                 [0]  ********** Done computing balance
+//[0]  XMax
+//[0]  0.0062171195870433
+//[0]  XMin
+//[0]  0.31083716971508
+//[0]  YMax
+//[0]  0.14123099123847
+//[0]  Ymin
+//[0]  0.068985327127354
+
+p2 JAN S8
+//[0]  Balance table:
+//[0]   Absorption rate          = 4.74070e-01
+//[0]   Production rate          = 0.00000e+00
+//[0]   In-flow rate             = 1.00000e+00
+//[0]   Out-flow rate            = 5.25930e-01
+//[0]   Integrated scalar flux   = 1.00000e+00
+//[0]   Net Gain/Loss            = 3.97460e-11
+//[0]   Net Gain/Loss normalized = 3.97460e-11
+//                                 [0]
+//                                 [0]  ********** Done computing balance
+//[0]  XMax
+//[0]  0.0062173774560831
+//[0]  XMin
+//[0]  0.30671201423743
+//[0]  YMax
+//[0]  0.14208960239754
+//[0]  Ymin
+//[0]  0.070910848725567
