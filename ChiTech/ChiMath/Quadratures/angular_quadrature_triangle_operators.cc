@@ -22,12 +22,16 @@ double InnerProduct(const VecDbl& f, const VecDbl& g, const VecDbl& wt)
   return sum_val;
 }
 
-void chi_math::AngularQuadratureTriangle::FilterMoments()
+void chi_math::AngularQuadratureTriangle::FilterMoments(unsigned int scattering_order)
 {
   if (m2d_op_built and d2m_op_built)
   {
-    int moments_to_keep = 1 + (moments*3 + moments*moments)/2;
-    auto m2d_transposed = chi_math::Transpose(m2d_op);
+    int moments_to_keep = 1 +
+      (scattering_order*3 + scattering_order*scattering_order)/2;
+    auto m2d_transposed = m2d_op;
+    chi::log.Log0() << "Size of m2ell preresize " << m_to_ell_em_map.size();
+    m_to_ell_em_map.resize(moments_to_keep);
+    chi::log.Log0() << "Size of m2ell postresize " << m_to_ell_em_map.size();
     std::vector<std::vector<double>> m2dworking;
     std::vector<std::vector<double>> d2mworking;
     for (size_t i {}; i<moments_to_keep;++i)
@@ -35,23 +39,22 @@ void chi_math::AngularQuadratureTriangle::FilterMoments()
       d2mworking.push_back(d2m_op.at(i));
       m2dworking.push_back(m2d_transposed.at(i));
     }
-    m2d_op = chi_math::Transpose(m2dworking);
+    m2d_op = m2dworking;
     d2m_op = d2mworking;
   }
 }
 
 void chi_math::AngularQuadratureTriangle::
-MakeHarmonicIndices(unsigned int scattering_order, int dimension)
+MakeHarmonicIndices(unsigned int, int dimension)
 {
-  int L = static_cast<int>(scattering_order);
   //We need to limit the scattering order to make sure this doesn't blow up
-  if (L>sn) L = static_cast<int>(sn);
+  int L = static_cast<int>(sn);
   if (m_to_ell_em_map.empty())
   {
     for (int ell = 0; ell <= L; ++ell)
       for (int m = -ell; m <= ell; m += 2)
       {
-        if (ell == L and m >= 0) break;
+        if (ell == L and m >= 0 and ell != 0) break;
         else m_to_ell_em_map.emplace_back(ell, m);
         chi::log.Log0() << "l " << ell << " and m "<< m << "\n";
       }
@@ -63,8 +66,6 @@ BuildDiscreteToMomentOperator
   (unsigned int scattering_order,
    int dimension)
 {
-
-  //ALL FOCUS ON METHOD 1 TO ID PROBLEM
 
   chi::log.Log0() <<
   "$$$$$$$$$$$$$$$$$$$$$$$$$$\n Using the self made d2m\n$$$$$$$$$$$$$$$$$\n";
@@ -78,21 +79,13 @@ BuildDiscreteToMomentOperator
     std::vector<std::vector<double>> cmt;
     unsigned int num_angles = abscissae.size();
     unsigned int num_moms = m_to_ell_em_map.size();
-    chi::log.Log0() << "This is my number of angles " <<num_angles<<
-    " and number of moments " << num_moms << "\n";
-    //Check to see if the number of moments given for the scattering
-    // order is greater than the quadrature allows
-//    if (num_moms > num_angles)
-//      num_moms = num_angles;
-    chi::log.Log0() << "This is my number of angles " <<num_angles<<
-                      " and number of moments " << num_moms <<
-                      " After truncate\n";
     // Changed this iteration scheme from the basic class
     // because the basic class would do the whole D2M matrix based
     // on the scattering order given and our method doesn't allow that
-    for (size_t mom_pos = 0; mom_pos<num_moms; ++mom_pos)
+//    for (size_t mom_pos = 0; mom_pos<num_moms; ++mom_pos)
+    for (const auto &ell_em: m_to_ell_em_map)
     {
-      const auto &ell_em =  m_to_ell_em_map[mom_pos];
+//      const auto &ell_em =  m_to_ell_em_map[mom_pos];
       std::vector<double> cur_mom;
       cur_mom.reserve(num_angles);
       printf("This is the l %d and m %d \n",ell_em.ell,ell_em.m);
@@ -154,11 +147,7 @@ BuildDiscreteToMomentOperator
   {
     d2m_op.clear();
     unsigned int num_angles = abscissae.size();
-    unsigned int num_moms = 0;
-    if (moments!=0 and moments!=sn)
-      num_moms = 1 + (moments*3 + moments*moments)/2;
-    else
-      num_moms = m_to_ell_em_map.size();
+    unsigned int num_moms = m_to_ell_em_map.size();
     MatDbl cmt;
     //Make the coefficent matrix
     for (const auto &ell_em: m_to_ell_em_map)
@@ -255,4 +244,11 @@ BuildMomentToDiscreteOperator
   chi_math::PrintMatrix(m2d_op);
   chi::log.Log0() << "The m2d*d2m op \n";
   chi_math::PrintMatrix(chi_math::MatMul(chi_math::Transpose(m2d_op),d2m_op));
+  if (scattering_order < sn )
+    FilterMoments(scattering_order);
+  chi::log.Log0() << "AFTER FILTERING FOR SCATTERING ORDER \n";
+  chi::log.Log0() << "The d2m op \n";
+  chi_math::PrintMatrix(d2m_op);
+  chi::log.Log0() << "The m2d op \n";
+  chi_math::PrintMatrix(m2d_op);
 }

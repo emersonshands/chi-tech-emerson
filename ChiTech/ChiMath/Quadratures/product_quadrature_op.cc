@@ -105,20 +105,29 @@ void chi_math::ProductQuadratureOp::CheckInputs()
 //  azimu_ang = new_azimu_ang;
 //}
 
-void chi_math::ProductQuadratureOp::FilterMoments()
+void chi_math::ProductQuadratureOp::FilterMoments(unsigned int scattering_order)
 {
   if (m2d_op_built and d2m_op_built)
   {
-    int moments_to_keep = 1 + (moments*3 + moments*moments)/2;
-    auto m2d_transposed = chi_math::Transpose(m2d_op);
+    int moments_to_keep = 1 + (scattering_order*3 +
+      scattering_order*scattering_order)/2;
+    if (scattering_order >= sn)
+    {
+      int scatter_adj = scattering_order-sn;
+      moments_to_keep = moments_to_keep + ( );
+    }
+    auto m2d_transposed = m2d_op;
+    chi::log.Log0() << "Size of m2ell preresize " << m_to_ell_em_map.size();
+    m_to_ell_em_map.resize(moments_to_keep);
+    chi::log.Log0() << "Size of m2ell postresize " << m_to_ell_em_map.size();
     std::vector<std::vector<double>> m2dworking;
     std::vector<std::vector<double>> d2mworking;
-    for (size_t i {}; i<moments_to_keep;++i)
+    for (size_t i =0; i<moments_to_keep;++i)
     {
       d2mworking.push_back(d2m_op.at(i));
       m2dworking.push_back(m2d_transposed.at(i));
     }
-    m2d_op = chi_math::Transpose(m2dworking);
+    m2d_op = m2dworking;
     d2m_op = d2mworking;
   }
 }
@@ -172,6 +181,10 @@ void chi_math::ProductQuadratureOp::MakeHarmonicIndices
 void chi_math::ProductQuadratureOp::BuildDiscreteToMomentOperator
 (unsigned int scattering_order,int dimension)
 {
+  chi::log.Log0() <<
+                  "$$$$$$$$$$$$$$$$$$$$$$$$$$\n Using the self made d2m\n$$$$$$$$$$$$$$$$$\n";
+  chi::log.Log0() << "THIS IS SCATTERING ORDER " << scattering_order <<
+                  " AND DIMENSIONS " << dimension << "\n";
   if (d2m_op_built) return;
   MakeHarmonicIndices(scattering_order,dimension);
   if (not d2m_op_built and (method==1 or method==2))
@@ -194,7 +207,46 @@ void chi_math::ProductQuadratureOp::BuildDiscreteToMomentOperator
         double w = weights[n];
         cur_mom.push_back(value*w);
       }
-      d2m_op.push_back(cur_mom);
+      if (method ==1)
+      {
+        d2m_op.push_back(cur_mom);
+      }
+      else
+        cmt.push_back(cur_mom);
+    }
+    if (method == 2)
+    {
+      // solve for the weights
+      //change this to change normalization of the weights
+      double normalization = 4.0*M_PI;
+      std::vector<double> wt = {normalization};
+      for(size_t i = 1; i<weights.size(); ++i)
+        wt.emplace_back(0.0);
+      auto invt = chi_math::Inverse(cmt);
+//      chi::log.Log0() << "THE WT \n";
+//      chi_math::PrintVector(wt);
+//      chi::log.Log0() << "The original cmt \n";
+//      chi_math::PrintMatrix(cmt);
+//      chi::log.Log0() << "The inverse cmt \n";
+//      chi_math::PrintMatrix(invt);
+      auto new_weights = chi_math::MatMul(invt,wt);
+      weights = new_weights;
+      for (const auto &ell_em: m_to_ell_em_map)
+      {
+        std::vector<double> cur_moment;
+        cur_moment.reserve(num_angles);
+
+        for (int n = 0; n < num_angles; n++)
+        {
+          const auto &cur_angle = abscissae[n];
+          double value =chi_math::Ylm(ell_em.ell, ell_em.m,
+                                      cur_angle.phi,
+                                      cur_angle.theta);
+          double w = weights[n];
+          cur_moment.push_back(value*w);
+        }
+        d2m_op.push_back(cur_moment);
+      }
     }
     d2m_op_built = true;
   }
@@ -279,21 +331,14 @@ void chi_math::ProductQuadratureOp::BuildDiscreteToMomentOperator
 //    d2m_op_built = true;
 //  }
 
-//  bool check = false;
-//  if(moments!=0 and
-//  (d2m_op_built and m2d_op_built) and
-//  (moments!=sn and method!=3))
-//  {
-//    check = true;
-//    FilterMoments();
-//  }
 }
 
 void chi_math::ProductQuadratureOp::BuildMomentToDiscreteOperator
 (unsigned int scattering_order,int dimension)
 {
-  if (not d2m_op_built) BuildDiscreteToMomentOperator(scattering_order,
-                                                      dimension);
+  if (not d2m_op_built)
+    BuildDiscreteToMomentOperator(scattering_order,
+                                  dimension);
   // Method 1 and 2 is just the inverse of d2m
   if (method == 1 or method == 2)
   {
@@ -302,11 +347,23 @@ void chi_math::ProductQuadratureOp::BuildMomentToDiscreteOperator
   }
   //The M2D operator has to be built in the D2M build if method 3
   m2d_op_built = true;
+  chi::log.Log0() << "The d2m op \n";
+  chi_math::PrintMatrix(d2m_op);
+  chi::log.Log0() << "The m2d op \n";
+  chi_math::PrintMatrix(m2d_op);
+  chi::log.Log0() << "The m2d*d2m op \n";
+  chi_math::PrintMatrix(chi_math::MatMul(chi_math::Transpose(m2d_op), d2m_op));
   //Now filter by the moment number given
 //  if(moments!=0 and d2m_op_built and m2d_op_built and moments!=sn)
 //    FilterMoments();
+  if (scattering_order < 2 * (sn - 1))
+  {
+    FilterMoments(scattering_order);
+  }
+  chi::log.Log0() << "AFTER FILTERING FOR SCATTERING ORDER \n";
+  chi::log.Log0() << "The d2m op \n";
+  chi_math::PrintMatrix(d2m_op);
+  chi::log.Log0() << "The m2d op \n";
+  chi_math::PrintMatrix(m2d_op);
+  chi::Exit(0);
 }
-
-
-
-

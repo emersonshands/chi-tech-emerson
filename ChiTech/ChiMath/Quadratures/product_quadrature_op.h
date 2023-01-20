@@ -33,6 +33,6 @@ public:
   void BuildMomentToDiscreteOperator(unsigned int scattering_order,
                                      int dimension) override;
 //  void OptimizeForPolarSymmetry(double normalization) override;
-  void FilterMoments();
+  void FilterMoments(unsigned int scattering_order);
 };
 #endif //CHITECHMATRIXWORK_PRODUCT_QUADRATURE_OP_H

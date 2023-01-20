@@ -35,7 +35,7 @@ public:
   void BuildMomentToDiscreteOperator(unsigned int scattering_order,
                                      int dimension) override;
 
-  void FilterMoments();
+  void FilterMoments(unsigned int scattering_order);
 };
 
 #endif //ANGULAR_QUADRATURE_TRIANGLE_H
