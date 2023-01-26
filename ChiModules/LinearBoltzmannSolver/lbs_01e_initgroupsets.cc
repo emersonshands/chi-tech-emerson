@@ -1,5 +1,6 @@
 #include "lbs_linear_boltzmann_solver.h"
-
+#include "chi_log.h"
+#include "lbs_structs.h"
 //###################################################################
 /**Initializes common groupset items.*/
 void lbs::SteadySolver::InitializeGroupsets()

@@ -65,50 +65,50 @@ for g=1,num_groups do
 end
 
 --========== ProdQuad
-sn = 4
+sn = 8
 method = 1
+Product = false
+Triangle = true
+scatterOrder = 3
+if (Product) then
+    --scatterOrder = 1 --2*(sn-1)
+    baseline = chiCreateProductQuadrature(GAUSS_LEGENDRE_CHEBYSHEV,sn/2,sn/2)
+    chiOptimizeAngularQuadratureForPolarSymmetry(baseline,4.0*math.pi)
+    quad = chiCreateProductQuadratureOperator(baseline,method,sn)
 
-scatterOrder = 3 --2*(sn-1)
-pquad = chiCreateProductQuadrature(GAUSS_LEGENDRE_CHEBYSHEV,2,2)
-chiOptimizeAngularQuadratureForPolarSymmetry(pquad,4.0*math.pi)
-pq2 = chiCreateProductQuadratureOperator(pquad,method,sn)
-
-tab = chiGetProductQuadrature(pq2)
-chiLog(LOG_0, "Checking Values of Quadrature")
-weights = {}
-for pl=1,rawlen(tab) do
-    chiLog(LOG_0, "Direction " .. tostring(pl))
-    chiLog(LOG_0, "Weight " .. tostring(tab[pl].weight))
-    chiLog(LOG_0, "Polar " .. tostring(tab[pl].polar))
-    chiLog(LOG_0, "XCos " .. tostring(math.sin(tab[pl].polar)*math.cos(tab[pl].azimuthal)*tab[pl].weight))
-    weights[#weights + 1] = tab[pl].weight
-    chiLog(LOG_0, "Azimu " .. tostring(tab[pl].azimuthal))
+    tab = chiGetProductQuadrature(quad)
+    chiLog(LOG_0, "Checking Values of Quadrature")
+    for pl=1,rawlen(tab) do
+        chiLog(LOG_0, "Direction " .. tostring(pl))
+        chiLog(LOG_0, "Weight " .. tostring(tab[pl].weight))
+        chiLog(LOG_0, "Polar " .. tostring(tab[pl].polar))
+        chiLog(LOG_0, "XCos " .. tostring(math.sin(tab[pl].polar)*math.cos(tab[pl].azimuthal)*tab[pl].weight))
+        chiLog(LOG_0, "Azimu " .. tostring(tab[pl].azimuthal))
+    end
 end
+if (Triangle) then
+    --scatterOrder = sn
+    quad = chiCreateAngularQuadratureTriangle(method,sn)
 
---scatterOrder = 2
---pquad = chiCreateAngularQuadratureTriangle(method,sn)
---
---tab = chiGetTriangleQuadrature(pquad)
---chiLog(LOG_0, "Checking Values of Quadrature")
---weights = {}
---for pl=1,rawlen(tab) do
---    chiLog(LOG_0, "Direction " .. tostring(pl))
---    chiLog(LOG_0, "Weight " .. tostring(tab[pl].weight))
---    weights[#weights + 1] = tab[pl].weight
---    chiLog(LOG_0, "Polar " .. tostring(tab[pl].polar))
---    chiLog(LOG_0, "Azimu " .. tostring(tab[pl].azimuthal))
---end
-
+    tab = chiGetTriangleQuadrature(quad)
+    chiLog(LOG_0, "Checking Values of Quadrature")
+    for pl=1,rawlen(tab) do
+        chiLog(LOG_0, "Direction " .. tostring(pl))
+        chiLog(LOG_0, "Weight " .. tostring(tab[pl].weight))
+        chiLog(LOG_0, "Polar " .. tostring(tab[pl].polar))
+        chiLog(LOG_0, "Azimu " .. tostring(tab[pl].azimuthal))
+    end
+end
 --========== Groupset def
 gs0 = chiLBSCreateGroupset(phys1)
 cur_gs = gs0
 chiLBSGroupsetAddGroups(phys1,cur_gs,0,num_groups-1)
-chiLBSGroupsetSetQuadrature(phys1,cur_gs,pq2)
+chiLBSGroupsetSetQuadrature(phys1,cur_gs,quad)
 chiLBSGroupsetSetAngleAggregationType(phys1,cur_gs,LBSGroupset.ANGLE_AGG_SINGLE)
 chiLBSGroupsetSetAngleAggDiv(phys1,cur_gs,1)
 chiLBSGroupsetSetGroupSubsets(phys1,cur_gs,1)
 chiLBSGroupsetSetIterativeMethod(phys1,cur_gs,KRYLOV_GMRES_CYCLES)
-chiLBSGroupsetSetResidualTolerance(phys1,cur_gs,2.606e-10)
+chiLBSGroupsetSetResidualTolerance(phys1,cur_gs,1.1e-9)
 chiLBSGroupsetSetMaxIterations(phys1,cur_gs,300)
 chiLBSGroupsetSetGMRESRestartIntvl(phys1,cur_gs,100)
 
@@ -141,13 +141,13 @@ chiLBSGroupsetSetGMRESRestartIntvl(phys1,cur_gs,100)
 
 
 function luaBoundaryFunctionLeft(cell_global_id,
-                              material_id,
-                              location,
-                              normal,
-                              quadrature_angle_indices,
-                              quadrature_angle_vectors,
-                              quadrature_phi_theta_angles,
-                              group_indices)
+                                 material_id,
+                                 location,
+                                 normal,
+                                 quadrature_angle_indices,
+                                 quadrature_angle_vectors,
+                                 quadrature_phi_theta_angles,
+                                 group_indices)
     num_angles = rawlen(quadrature_angle_vectors)
     num_groups = rawlen(group_indices)
     psi = {}
@@ -155,6 +155,16 @@ function luaBoundaryFunctionLeft(cell_global_id,
     anglePass = 0
     normalVal = 1.0
     sum = 0
+    if (Product) then
+        quadVal = chiGetTriangleQuadrature(quad)
+    end
+    if (Triangle) then
+        quadVal = chiGetTriangleQuadrature(quad)
+    end
+    weights = {}
+    for pl=1,rawlen(quadVal) do
+        weights[#weights + 1] = quadVal[pl].weight
+    end
     for ni=1,num_angles do
         --print("Sum " .. tostring(sum))
         omega = quadrature_angle_vectors[ni]
@@ -164,6 +174,7 @@ function luaBoundaryFunctionLeft(cell_global_id,
         weightCurrent = weights[indexQ+1]
         --print("Current weight " .. tostring(weightCurrent) .. " Current index " .. tostring(indexQ))
         --print("Current Phi " .. tostring(phi_theta.phi*180/math.pi))
+
         for gi=1,num_groups do
             g = group_indices[gi]
 
@@ -290,8 +301,14 @@ bsrc={}
 for g=1,num_groups do
     bsrc[g] = 0.0
 end
-bsrc[1] = 1.0
+bsrc[1] = 1.0/4.0/math.pi
 --chiLBSSetProperty(phys1,BOUNDARY_CONDITION,XMIN,
+--        LBSBoundaryTypes.INCIDENT_ISOTROPIC, bsrc);
+--chiLBSSetProperty(phys1,BOUNDARY_CONDITION,XMAX,
+--        LBSBoundaryTypes.INCIDENT_ISOTROPIC, bsrc);
+--chiLBSSetProperty(phys1,BOUNDARY_CONDITION,YMIN,
+--        LBSBoundaryTypes.INCIDENT_ISOTROPIC, bsrc);
+--chiLBSSetProperty(phys1,BOUNDARY_CONDITION,YMAX,
 --        LBSBoundaryTypes.INCIDENT_ISOTROPIC, bsrc);
 chiLBSSetProperty(phys1,BOUNDARY_CONDITION,XMIN,
                         LBSBoundaryTypes.INCIDENT_ANISTROPIC_HETEROGENOUS,
@@ -327,7 +344,7 @@ chiFFInterpolationInitialize(slice2)
 chiFFInterpolationExecute(slice2)
 
 --############################################### Exports
-if not master_export == nil then
+if  master_export == nil then
     chiFFInterpolationExportPython(slice2)
 end
 
@@ -351,7 +368,7 @@ chiLog(LOG_0,"Ymin")
 chiLog(LOG_0, tostring(leakage3[1]))
 
 --############################################### Plots
-if (chi_location_id == 0 and not master_export == nil) then
+if (chi_location_id == 0 and master_export == nil) then
     local handle = io.popen("python3 ZPFFI00.py")
 end
 
