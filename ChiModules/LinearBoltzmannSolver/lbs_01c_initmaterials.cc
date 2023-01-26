@@ -41,7 +41,6 @@ void lbs::SteadySolver::InitMaterials()
     chi::log.LogAllWarning()
       << "Number of invalid material cells: " << invalid_mat_cell_count;
   }
-
   //================================================== Get ready for processing
   std::stringstream materials_list;
   matid_to_xs_map.clear();

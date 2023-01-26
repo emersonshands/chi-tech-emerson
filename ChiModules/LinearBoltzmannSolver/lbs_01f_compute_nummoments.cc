@@ -1,5 +1,5 @@
 #include "lbs_linear_boltzmann_solver.h"
-
+#include "chi_log.h"
 //###################################################################
 /** Computes the number of moments for the given mesher types*/
 void lbs::SteadySolver::ComputeNumberOfMoments()
@@ -13,10 +13,10 @@ void lbs::SteadySolver::ComputeNumberOfMoments()
 
   num_moments =
     (int)groupsets.front().quadrature->GetMomentToHarmonicsIndexMap().size();
-
   if (num_moments == 0)
     throw std::logic_error("LinearBoltzmann::Solver::ComputeNumberOfMoments : "
                            "unable to infer number of moments from angular "
                            "quadrature.");
+
 }
 

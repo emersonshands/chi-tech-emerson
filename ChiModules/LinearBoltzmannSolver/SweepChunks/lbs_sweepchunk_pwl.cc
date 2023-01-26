@@ -1,6 +1,8 @@
 #include "lbs_sweepchunk_pwl.h"
 
 #include "chi_runtime.h"
+#include "chi_log.h"
+#include "ChiMath/chi_math.h"
 #include "LinearBoltzmannSolver/Groupset/lbs_groupset.h"
 
 
@@ -102,6 +104,11 @@ Sweep(chi_mesh::sweep_management::AngleSet *angle_set)
   auto const& d2m_op = groupset.quadrature->GetDiscreteToMomentOperator();
   auto const& m2d_op = groupset.quadrature->GetMomentToDiscreteOperator();
 
+//  chi::log.Log0()<< "CHECK THE D2M AND M2D MATRICES\nM2D";
+//  chi_math::PrintMatrix(m2d_op);
+//  chi::log.Log0() << "D2M";
+//  chi_math::PrintMatrix(d2m_op);
+
   const auto& psi_uk_man = groupset.psi_uk_man;
   typedef const int64_t cint64_t;
 
@@ -136,6 +143,10 @@ Sweep(chi_mesh::sweep_management::AngleSet *angle_set)
       const int angle_num = angle_set->angles[angle_set_index];
       const chi_mesh::Vector3& omega = groupset.quadrature->omegas[angle_num];
       const double wt = groupset.quadrature->weights[angle_num];
+//      chi::log.Log() << " Angle " << angle_num  << "\nWeights \n" << wt << "\nAngle\nX " <<
+//            omega.x << " Y "<< omega.y << " Z " << omega.z << "\nSigmaT " << sigma_tg[0];
+//      chi::log.Log() << " Angle from z, theta " << acos(omega.z) << " Phi,  sin value " << sin(acos(omega.z));
+//      chi::log.Log() << " SPS LOCAL CELL " << spls_index;
 
       // ============================================ Gradient matrix
       for (int i = 0; i < num_nodes; ++i)
@@ -211,6 +222,8 @@ Sweep(chi_mesh::sweep_management::AngleSet *angle_set)
           {
             const size_t ir = transport_view.MapDOF(i, m, g);
             temp_src += m2d_op[m][angle_num]*q_moments[ir];
+//            chi::log.Log() << "Moment " << m << " Angle " <<
+//            angle_num << " value " << m2d_op[m][angle_num] ;
           }//for m
           source[i] = temp_src;
         }//for i
