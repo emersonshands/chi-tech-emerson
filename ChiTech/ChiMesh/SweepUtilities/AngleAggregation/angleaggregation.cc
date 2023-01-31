@@ -1,8 +1,6 @@
 #include "angleaggregation.h"
 
 #include "chi_log.h"
-;
-
 #include "chi_mpi.h"
 
 
@@ -20,6 +18,9 @@ void chi_mesh::sweep_management::AngleAggregation::
   number_of_group_subsets = in_number_of_group_subsets;
   quadrature = in_quadrature;
   grid = in_grid;
+
+  for (auto& bndry : sim_boundaries)
+    bndry->Setup(*grid, *quadrature);
 
   is_setup = true;
 }
@@ -82,10 +83,6 @@ void chi_mesh::sweep_management::AngleAggregation::InitializeReflectingBCs()
 {
   const double epsilon = 1.0e-8;
 
-  int total_reflect_cells = 0;
-  int total_reflect_faces = 0;
-  int total_reflect_size = 0;
-
   bool reflecting_bcs_initialized=false;
 
   int bndry_id=0;
@@ -139,7 +136,7 @@ void chi_mesh::sweep_management::AngleAggregation::InitializeReflectingBCs()
         cell_vec.resize(num_local_cells);
         for (const auto& cell : grid->local_cells)
         {
-          int c = cell.local_id;
+          const uint64_t c = cell.local_id;
 
           //=========================== Check cell on ref bndry
           bool on_ref_bndry = false;
@@ -152,7 +149,6 @@ void chi_mesh::sweep_management::AngleAggregation::InitializeReflectingBCs()
             }
           }
           if (not on_ref_bndry) continue;
-          total_reflect_cells += 1;
 
           //=========================== If cell on ref bndry
           cell_vec[c].resize(cell.faces.size());
@@ -165,8 +161,6 @@ void chi_mesh::sweep_management::AngleAggregation::InitializeReflectingBCs()
               cell_vec[c][f].clear();
               cell_vec[c][f].resize(face.vertex_ids.size(),
                                     std::vector<double>(number_of_groups,0.0));
-              total_reflect_faces += 1;
-              total_reflect_size  += face.vertex_ids.size()*number_of_groups;
             }
             ++f;
           }
@@ -345,7 +339,7 @@ std::vector<double> chi_mesh::sweep_management::AngleAggregation::
       auto& rbndry = (BoundaryReflecting&)(*bndry);
 
       if (rbndry.opposing_reflected)
-        for (auto& angle : rbndry.hetero_boundary_flux_old)
+        for (auto& angle : rbndry.hetero_boundary_flux)
           for (auto& cellvec : angle)
             for (auto& facevec : cellvec)
               for (auto& dofvec : facevec)
@@ -358,13 +352,13 @@ std::vector<double> chi_mesh::sweep_management::AngleAggregation::
   //======================================== Intra-cell cycles
   for (auto& as_group : angle_set_groups)
     for (auto& angle_set : as_group.angle_sets)
-      for (auto val : angle_set->delayed_local_psi_old)
+      for (auto val : angle_set->delayed_local_psi)
         psi_vector.push_back(val);
 
   //======================================== Inter location cycles
   for (auto& as_group : angle_set_groups)
     for (auto& angle_set : as_group.angle_sets)
-      for (auto& loc_vector : angle_set->delayed_prelocI_outgoing_psi_old)
+      for (auto& loc_vector : angle_set->delayed_prelocI_outgoing_psi)
         for (auto val : loc_vector)
           psi_vector.push_back(val);
 
@@ -414,4 +408,64 @@ void chi_mesh::sweep_management::AngleAggregation::
       for (auto& loc_vector : angle_set->delayed_prelocI_outgoing_psi_old)
         for (auto& val : loc_vector)
           val = stl_vector[index++];
+}
+
+//###################################################################
+/**Copies the old delayed angular fluxes to the new.*/
+void chi_mesh::sweep_management::AngleAggregation::
+  SetDelayedPsiOld2New()
+{
+  //======================================== Opposing reflecting bndries
+  for (auto& bndry : sim_boundaries)
+  {
+    if (bndry->IsReflecting())
+    {
+      auto& rbndry = (BoundaryReflecting&)(*bndry);
+
+      if (rbndry.opposing_reflected)
+        rbndry.hetero_boundary_flux = rbndry.hetero_boundary_flux_old;
+
+    }//if reflecting
+  }//for bndry
+
+  //======================================== Intra-cell cycles
+  for (auto& as_group : angle_set_groups)
+    for (auto& angle_set : as_group.angle_sets)
+      angle_set->delayed_local_psi = angle_set->delayed_local_psi_old;
+
+  //======================================== Inter location cycles
+  for (auto& as_group : angle_set_groups)
+    for (auto& angle_set : as_group.angle_sets)
+      angle_set->delayed_prelocI_outgoing_psi =
+        angle_set->delayed_prelocI_outgoing_psi_old;
+}
+
+//###################################################################
+/**Copies the new delayed angular fluxes to the old.*/
+void chi_mesh::sweep_management::AngleAggregation::
+  SetDelayedPsiNew2Old()
+{
+  //======================================== Opposing reflecting bndries
+  for (auto& bndry : sim_boundaries)
+  {
+    if (bndry->IsReflecting())
+    {
+      auto& rbndry = (BoundaryReflecting&)(*bndry);
+
+      if (rbndry.opposing_reflected)
+        rbndry.hetero_boundary_flux_old = rbndry.hetero_boundary_flux;
+
+    }//if reflecting
+  }//for bndry
+
+  //======================================== Intra-cell cycles
+  for (auto& as_group : angle_set_groups)
+    for (auto& angle_set : as_group.angle_sets)
+      angle_set->delayed_local_psi_old = angle_set->delayed_local_psi;
+
+  //======================================== Inter location cycles
+  for (auto& as_group : angle_set_groups)
+    for (auto& angle_set : as_group.angle_sets)
+      angle_set->delayed_prelocI_outgoing_psi_old =
+        angle_set->delayed_prelocI_outgoing_psi;
 }

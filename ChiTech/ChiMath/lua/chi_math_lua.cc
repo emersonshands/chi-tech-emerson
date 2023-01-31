@@ -32,6 +32,8 @@ void chi_math::lua_utils::RegisterLuaEntities(lua_State *L)
   LUA_FMACRO1(chiCreateProductQuadratureOperator);
   LUA_FMACRO1(chiPrintD2M);
   LUA_FMACRO1(chiPrintM2D);
+  LUA_FMACRO1(chiGetTriangleQuadrature);
+  LUA_FMACRO1(chiCheckIdentity);
 
   LUA_FMACRO1(chiCreateSLDFESQAngularQuadrature);
   LUA_FMACRO1(chiLocallyRefineSLDFESQAngularQuadrature);

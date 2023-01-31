@@ -4,7 +4,7 @@
 #include "ChiMath/Quadratures/angular_quadrature_base.h"
 #include "ChiMath/Quadratures/quadrature_gausslegendre.h"
 #include "ChiMath/chi_math.h"
-#include "ChiMath/chi_math_04_gaussian_elimination_pivoting.h"
+#include "ChiMath/chi_math_04_Matrix_operations.h"
 
 namespace chi_math
 {
@@ -20,19 +20,22 @@ protected:
   const unsigned int moments;
 public:
   explicit
-  AngularQuadratureTriangle(unsigned int sn, unsigned int in_method);
+  AngularQuadratureTriangle(unsigned int in_method,unsigned int in_sn);
   explicit
-  AngularQuadratureTriangle(unsigned int sn, unsigned int in_method,
-                            unsigned int inmoments);
+  AngularQuadratureTriangle(unsigned int in_method,unsigned int in_sn,
+                            unsigned int in_moments);
 protected:
-  void TriangleInit(unsigned int sn);
-  void MakeHarmonicIndices(unsigned int l_max);
+  void TriangleInit();
+  void MakeHarmonicIndices(unsigned int scattering_order, int dimension)
+  override;
 
 public:
-  void BuildDiscreteToMomentOperator();
-  void BuildMomentToDiscreteOperator();
+  void BuildDiscreteToMomentOperator(unsigned int scattering_order,
+                                     int dimension) override;
+  void BuildMomentToDiscreteOperator(unsigned int scattering_order,
+                                     int dimension) override;
 
-  void FilterMoments();
+  void FilterMoments(unsigned int scattering_order);
 };
 
 #endif //ANGULAR_QUADRATURE_TRIANGLE_H

@@ -1,0 +1,41 @@
+# This header can be as large as you please. The actual processing
+# starts at NUM_GROUPS as the first word. After that, NUM_MOMENTS needs to
+# be processed before any of the other keywords.
+NUM_GROUPS 1
+NUM_MOMENTS 14
+SIGMA_T_BEGIN
+0   1.5
+SIGMA_T_END
+ 
+Comments
+  
+TRANSFER_MOMENTS_BEGIN
+#Zeroth moment (l=0)
+M_GPRIME_G_VAL 0 0 0 0.5 
+#(l=1)
+M_GPRIME_G_VAL 1 0 0 0.5
+#(l=2)
+M_GPRIME_G_VAL 2 0 0 0.5
+#(l=3)
+M_GPRIME_G_VAL 3 0 0 0.5
+#(l=4)
+M_GPRIME_G_VAL 4 0 0 0.5
+#(l=5)
+M_GPRIME_G_VAL 5 0 0 0.5
+#(l=6)
+M_GPRIME_G_VAL 6 0 0 0.5
+#(l=7)
+M_GPRIME_G_VAL 7 0 0 0.5
+#(l=8)
+M_GPRIME_G_VAL 8 0 0 0.5
+#(l=9)
+M_GPRIME_G_VAL 9 0 0 0.5
+#(l=10)
+M_GPRIME_G_VAL 10 0 0 0.5
+#(l=11)
+M_GPRIME_G_VAL 11 0 0 0.5
+#(l=12)
+M_GPRIME_G_VAL 12 0 0 0.5
+#(l=13)
+M_GPRIME_G_VAL 13 0 0 0.5
+TRANSFER_MOMENTS_END

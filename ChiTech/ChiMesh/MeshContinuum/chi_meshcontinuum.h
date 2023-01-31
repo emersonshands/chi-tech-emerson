@@ -84,10 +84,6 @@ public:
     global_cell_id_to_foreign_id_map.clear();
   }
 
-  void ExportCellsToPython(const char* fileName,
-                           bool surface_only=true,
-                           std::vector<int>* cell_flags = nullptr,
-                           int options = 0) const;
   void ExportCellsToObj(const char* fileName,
                            bool per_material=false,
                            int options = 0) const;
@@ -102,6 +98,9 @@ public:
 
   void FindAssociatedVertices(const chi_mesh::CellFace& cur_face,
                               std::vector<short>& dof_mapping) const;
+  static size_t MapCellFace(const chi_mesh::Cell& cur_cell,
+                     const chi_mesh::Cell& adj_cell,
+                     unsigned int f) ;
 
   chi_mesh::Vector3
   ComputeCentroidFromListOfNodes(const std::vector<uint64_t>& list) const;

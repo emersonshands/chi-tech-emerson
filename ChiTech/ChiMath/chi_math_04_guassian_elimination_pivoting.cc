@@ -1,5 +1,5 @@
 #include "ChiMath/chi_math.h"
-#include "chi_math_04_gaussian_elimination_pivoting.h"
+#include "chi_math_04_Matrix_operations.h"
 #include <cassert>
 //###################################################################
 /**Given an A matrix and b matrix, uses gaussian elimination
@@ -74,4 +74,40 @@ VecDbl chi_math::GaussEliminationPivot(const MatDbl& A,
     */
   }
   return x;
+}
+///###################################################################
+/**Given a matrix solve for the L1 norm */
+double chi_math::l1Norm(const MatDbl& ArrayGiven)
+{
+  double condition = -1.0;
+  const size_t rows = ArrayGiven[0].size();
+  const size_t cols = ArrayGiven.size();
+  for (size_t j = 0; j<cols;++j)
+  {
+    double sum = 0.0;
+    for (size_t i=0; i<rows;++i)
+    {
+      sum+=abs(ArrayGiven[i][j]);
+    }
+    if (sum>condition) condition = sum;
+  }
+  return condition;
+}
+///###################################################################
+/**Given a matrix solve for the L infinity norm */
+double chi_math::linfNorm(const MatDbl& ArrayGiven)
+{
+  double condition = -1.0;
+  const size_t rows = ArrayGiven[0].size();
+  const size_t cols = ArrayGiven.size();
+  for (size_t i=0; i<rows;++i)
+  {
+    double sum = 0.0;
+    for (size_t j = 0; j<cols;++j)
+    {
+      sum+=abs(ArrayGiven[i][j]);
+    }
+    if (sum>condition) condition = sum;
+  }
+  return condition;
 }

@@ -9,42 +9,39 @@
 
 chi_math::AngularQuadratureTriangle::
 AngularQuadratureTriangle(unsigned int in_method,
-                          unsigned int sn_in) :
+                          unsigned int in_sn) :
   method(in_method),
-  sn(sn_in),
+  sn(in_sn),
   moments(0)
 {
-  TriangleInit(sn);
+  TriangleInit();
 }
 
 chi_math::AngularQuadratureTriangle::
 AngularQuadratureTriangle(unsigned int in_method,
-                          unsigned int sn_in,
-                          unsigned int inmoments) :
+                          unsigned int in_sn,
+                          unsigned int in_moments) :
   method(in_method),
-  sn(sn_in),
-  moments(inmoments)
+  sn(in_sn),
+  moments(in_moments)
 {
-  TriangleInit(sn);
+  TriangleInit();
 }
 
 void chi_math::AngularQuadratureTriangle::
-MakeHarmonicIndices(unsigned int l_max)
+TriangleInit()
 {
-  const int L = static_cast<int>(l_max);
-  //Figure out what to do in dimensions other than 2d
-  if (m_to_ell_em_map.empty())
+
+  chi::log.Log0() << "Given the method "
+  << method << "\nGiven sn " << sn;
+
+  if (method != 1 and method != 2 and method !=3)
   {
-    for (int ell = 0; ell <= L; ++ell)
-      for (int m = -ell; m <= ell; m += 2)
-        if (ell == L and m >= 0) break;
-        else m_to_ell_em_map.emplace_back(ell, m);
+    printf("The method given is not 1, 2, or 3.\n Please reorder your input.\n "
+           "Given value %i\n",method);
+    chi::log.Log0Error() << "Mismatch in method given";
+    chi::Exit(510);
   }
-}
-
-void chi_math::AngularQuadratureTriangle::
-TriangleInit(unsigned int sn)
-{
   if (moments<0 or moments>sn)
   {
     printf("The moments user is asking for is greater than or less "
@@ -59,48 +56,54 @@ TriangleInit(unsigned int sn)
            "All values used\n"
            "Given value %i, sn=%i\n",moments,sn);
   }
-  //Need to form the harmonics first/ these change based on the method
-  //Clear the old m_to_ell mapping and redo it based on the method
-  m_to_ell_em_map.clear();
-  MakeHarmonicIndices(sn);
   chi_mesh::Vector3 new_omega;
   // grab the gauss points for the z axis, the number of points for GL is twice
   // that of the quadrature
   const auto old_omega = chi_math::QuadratureGaussLegendre(sn);
   // formulate the triangular quadrature
-  //chi_math::PrintVector(old_omega.weights);
-
   int num_div = 1;
   int weightPos =0;
   for(auto u : old_omega.qpoints)
   {
     double deltaVPhi = M_PI/(2.0*(double)num_div);
-    //By polar symmetry we want to remove any negative polar angles
-    if (u.x <= 0.0)
+    // When the QuadratureGaussLegendre gives us the x points we will
+    // use for our z positions on the unit sphere, they are ordered in
+    // descending order largest magnitude towards 0 on the negative side,
+    // and ascending order on the positive side of 0
+    // The weights are defined using the weights given by the GL quadrature
+    // which is the position in the weights that weightPos keeps track of.
+    // This will ignore the positive x values, and just use the descending
+    // order given by the quadrature and use the absolute value of the x values.
+    if (u.x >= 0.0)
     {
-      weightPos++;
-      continue;
+      break;
     }
     for(int v=0; v<num_div;++v)
     {
+      double new_z_value = abs(u.x);
+      chi::log.Log0() << " Z COSINE " << new_z_value;
       double phi = deltaVPhi/2.0 + (double)v*deltaVPhi;
-      double theta = acos(u.x);
+      double theta = acos(new_z_value);
       new_omega.x = sin(theta)*cos(phi);
       new_omega.y = sin(theta)*sin(phi);
       new_omega.z = cos(theta);
-      weights.push_back(old_omega.weights[weightPos]);
+      weights.push_back(old_omega.weights[weightPos]/num_div);
       omegas.emplace_back(new_omega);
       abscissae.emplace_back(phi,theta);
-
+      chi::log.Log0()<< "Phi value "<< phi << " Theta value "<<theta;
+      chi::log.Log0()<< "OMEGA x "<< new_omega.x <<
+      " OMEGA Y "<< new_omega.y << " OMEGA Z " << new_omega.z;
+      chi::log.Log0()<< "WEIGHT "<< weights.back();
     }
     weightPos++;
     num_div++;
   }
+//  chi::Exit(99);
   //This will loop through the other 3 parts of the unit circle
   //The order is x,y(done above); -x,y; -x,-y; x,-y
   double xsign = -1.0;
   double ysign = 1.0;
-  size_t size = weights.size();
+  size_t sizew = weights.size();
   for(int k=1;k<=3;++k)
   {
     if(k>1)
@@ -108,7 +111,7 @@ TriangleInit(unsigned int sn)
       ysign=-1.0;
       if(k>2) xsign =1.0;
     }
-    for(size_t l=0;l<size;++l)
+    for(size_t l=0;l<sizew;++l)
     {
       double phi = abscissae[l].phi+k*(M_PI/2.0);
       double theta = abscissae[l].theta;
@@ -118,10 +121,13 @@ TriangleInit(unsigned int sn)
       weights.push_back(weights[l]);
       omegas.emplace_back(new_omega);
       abscissae.emplace_back(phi,theta);
-
+      chi::log.Log0()<< "Phi value "<< phi << " Theta value "<<theta;
+      chi::log.Log0()<< "OMEGA x "<< new_omega.x <<
+                     " OMEGA Y "<< new_omega.y << " OMEGA Z " << new_omega.z;
+      chi::log.Log0()<< "WEIGHT "<< weights.back();
     }
   }
   //Now we need to call optimize for polar symmetry to normalize
   // the weights to 4pi to correctly integrate over the sphere
-  chi_math::AngularQuadrature::OptimizeForPolarSymmetry(4.0*M_PI);
+//  chi_math::AngularQuadrature::OptimizeForPolarSymmetry(4.0*M_PI);
 }
