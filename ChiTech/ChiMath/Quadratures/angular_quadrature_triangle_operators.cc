@@ -130,10 +130,10 @@ BuildDiscreteToMomentOperator
     auto invt = chi_math::Inverse(cmt);
     chi::log.Log0() << "THE WT \n";
     chi_math::PrintVector(wt);
-    chi::log.Log0() << "The original cmt \n";
-    chi_math::PrintMatrix(cmt);
-    chi::log.Log0() << "The inverse cmt \n";
-    chi_math::PrintMatrix(invt);
+//    chi::log.Log0() << "The original cmt \n";
+//    chi_math::PrintMatrix(cmt);
+//    chi::log.Log0() << "The inverse cmt \n";
+//    chi_math::PrintMatrix(invt);
     auto new_weights = chi_math::MatMul(invt, wt);
     chi::log.Log0() << "The old weights \n";
     chi_math::PrintVector(weights);

@@ -61,7 +61,6 @@ TriangleInit()
   // that of the quadrature
   const auto old_omega = chi_math::QuadratureGaussLegendre(sn);
   // formulate the triangular quadrature
-
   int num_div = 1;
   int weightPos =0;
   for(auto u : old_omega.qpoints)
@@ -82,6 +81,7 @@ TriangleInit()
     for(int v=0; v<num_div;++v)
     {
       double new_z_value = abs(u.x);
+      chi::log.Log0() << " Z COSINE " << new_z_value;
       double phi = deltaVPhi/2.0 + (double)v*deltaVPhi;
       double theta = acos(new_z_value);
       new_omega.x = sin(theta)*cos(phi);
@@ -98,6 +98,7 @@ TriangleInit()
     weightPos++;
     num_div++;
   }
+//  chi::Exit(99);
   //This will loop through the other 3 parts of the unit circle
   //The order is x,y(done above); -x,y; -x,-y; x,-y
   double xsign = -1.0;

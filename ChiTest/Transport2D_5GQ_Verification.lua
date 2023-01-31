@@ -66,12 +66,12 @@ end
 
 --========== ProdQuad
 sn = 8
-method = 1
-Product = false
-Triangle = true
-scatterOrder = 3
+method = 3
+Product = true
+Triangle = false
+--scatterOrder = 4
 if (Product) then
-    --scatterOrder = 1 --2*(sn-1)
+    scatterOrder = 2*(sn-1)
     baseline = chiCreateProductQuadrature(GAUSS_LEGENDRE_CHEBYSHEV,sn/2,sn/2)
     chiOptimizeAngularQuadratureForPolarSymmetry(baseline,4.0*math.pi)
     quad = chiCreateProductQuadratureOperator(baseline,method,sn)
@@ -79,7 +79,7 @@ if (Product) then
     tab = chiGetProductQuadrature(quad)
     chiLog(LOG_0, "Checking Values of Quadrature")
     for pl=1,rawlen(tab) do
-        chiLog(LOG_0, "Direction " .. tostring(pl))
+        chiLog(LOG_0, "\nDirection " .. tostring(pl))
         chiLog(LOG_0, "Weight " .. tostring(tab[pl].weight))
         chiLog(LOG_0, "Polar " .. tostring(tab[pl].polar))
         chiLog(LOG_0, "XCos " .. tostring(math.sin(tab[pl].polar)*math.cos(tab[pl].azimuthal)*tab[pl].weight))
@@ -87,7 +87,7 @@ if (Product) then
     end
 end
 if (Triangle) then
-    --scatterOrder = sn
+    scatterOrder = sn
     quad = chiCreateAngularQuadratureTriangle(method,sn)
 
     tab = chiGetTriangleQuadrature(quad)
@@ -302,17 +302,19 @@ for g=1,num_groups do
     bsrc[g] = 0.0
 end
 bsrc[1] = 1.0/4.0/math.pi
---chiLBSSetProperty(phys1,BOUNDARY_CONDITION,XMIN,
---        LBSBoundaryTypes.INCIDENT_ISOTROPIC, bsrc);
+chiLBSSetProperty(phys1,BOUNDARY_CONDITION,XMIN,
+        LBSBoundaryTypes.INCIDENT_ISOTROPIC, bsrc);
 --chiLBSSetProperty(phys1,BOUNDARY_CONDITION,XMAX,
 --        LBSBoundaryTypes.INCIDENT_ISOTROPIC, bsrc);
 --chiLBSSetProperty(phys1,BOUNDARY_CONDITION,YMIN,
 --        LBSBoundaryTypes.INCIDENT_ISOTROPIC, bsrc);
 --chiLBSSetProperty(phys1,BOUNDARY_CONDITION,YMAX,
 --        LBSBoundaryTypes.INCIDENT_ISOTROPIC, bsrc);
-chiLBSSetProperty(phys1,BOUNDARY_CONDITION,XMIN,
-                        LBSBoundaryTypes.INCIDENT_ANISTROPIC_HETEROGENOUS,
-                        "luaBoundaryFunctionLeft");
+
+
+--chiLBSSetProperty(phys1,BOUNDARY_CONDITION,XMIN,
+--                        LBSBoundaryTypes.INCIDENT_ANISTROPIC_HETEROGENOUS,
+--                        "luaBoundaryFunctionLeft");
 --chiLBSSetProperty(phys1,BOUNDARY_CONDITION,XMAX,
 --        LBSBoundaryTypes.INCIDENT_ANISTROPIC_HETEROGENOUS,
 --        "luaBoundaryFunctionRight");

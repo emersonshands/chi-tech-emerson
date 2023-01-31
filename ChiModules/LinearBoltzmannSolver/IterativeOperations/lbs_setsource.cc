@@ -52,7 +52,14 @@ void lbs::SteadySolver::
     auto P0_src = matid_to_src_map[cell.material_id];
 
     const auto& S = xs.transfer_matrices;
-
+//    chi::log.Log0() << "Printing the S matrix";
+//    for (int i=0;i<num_moments;++i)
+//    {
+//      chi::log.Log0() << "I " << i;
+//      chi::log.Log0() << S[i].ValueIJ(i,i);
+//    }
+//    chi::Exit(99);
+    int iterator = 0;
     //==================== Obtain src
     double* src = default_zero_src.data();
     if (P0_src and apply_mat_src)
@@ -87,16 +94,22 @@ void lbs::SteadySolver::
           if (moment_avail and apply_ags_scatter_src)
             for (const auto& [row_g, gprime, sigma_sm] : S[ell].Row(g))
               if ((gprime < gs_i) or (gprime > gs_f))
+              {
                 inscatter_g += sigma_sm * phi_old_local[uk_map + gprime];
-
+              }
           //====================== Apply within-groupset scattering
           if (moment_avail and apply_wgs_scatter_src)
             for (const auto& [row_g, gprime, sigma_sm] : S[ell].Row(g))
               if ((gprime >= gs_i) and (gprime <= gs_f))
+              {
+//                chi::log.Log0() << "L " << ell << " sigma_l " << sigma_sm;
                 inscatter_g += sigma_sm * phi_old_local[uk_map + gprime];
+              }
 
+//          chi::log.Log0() << inscatter_g;
+//          ++iterator;
+//          if (iterator == 100) chi::Exit(99);
           destination_q[uk_map + g] += inscatter_g;
-
           double infission_g = 0.0;
           const bool fission_avail = (xs.is_fissile and ell == 0);
 

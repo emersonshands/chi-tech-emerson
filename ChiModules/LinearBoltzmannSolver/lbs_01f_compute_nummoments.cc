@@ -17,6 +17,12 @@ void lbs::SteadySolver::ComputeNumberOfMoments()
     throw std::logic_error("LinearBoltzmann::Solver::ComputeNumberOfMoments : "
                            "unable to infer number of moments from angular "
                            "quadrature.");
-
+//  chi::log.Log0() << "Printing Mapping NUM MOMENTS " << num_moments;
+//  auto mapping = groupsets[0].quadrature->GetMomentToHarmonicsIndexMap();
+//  for(auto& ell_m : mapping)
+//  {
+//    chi::log.Log0() << "L " << ell_m.ell << " m " << ell_m.m;
+//  }
+//  chi::Exit(99);
 }
 
