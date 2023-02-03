@@ -232,15 +232,41 @@ void chi_math::ProductQuadratureOp::BuildDiscreteToMomentOperator
 //    Method 3 using GS orthogonalization
   if(method ==3)
   {
+    std::vector<std::vector<double>> cmt;
+    unsigned int num_angles = abscissae.size();
+    unsigned int num_moms = m_to_ell_em_map.size();
+    for (const auto &ell_em: m_to_ell_em_map)
+    {
+      std::vector<double> cur_mom;
+      cur_mom.reserve(num_angles);
+
+      for (int n = 0; n < num_angles; n++)
+      {
+        const auto &cur_angle = abscissae[n];
+        double value =chi_math::Ylm(ell_em.ell, ell_em.m,
+                                    cur_angle.phi,
+                                    cur_angle.theta);
+        cur_mom.push_back(value);
+      }
+      cmt.push_back(cur_mom);
+    }
+
+
+    // solve for the weights
+    //change this to change normalization of the weights
+    double normalization = 4.0*M_PI;
+    std::vector<double> wt = {normalization};
+    for(size_t i = 1; i<weights.size(); ++i)
+      wt.emplace_back(0.0);
+    auto invt = chi_math::Inverse(cmt);
+    auto new_weights = chi_math::MatMul(invt,wt);
+    weights.clear();
+    weights = new_weights;
+
     d2m_op.clear();
     printf("the weights\n");
     chi_math::PrintVector(weights);
-    unsigned int num_angles = weights.size();
-//    if (moments!=0 and moments!=sn)
-//      unsigned int num_moms = 1 + (moments*3 + moments*moments)/2;
-//    else
-//      unsigned int num_moms = m_to_ell_em_map.size();
-    MatDbl cmt;
+
     //Make the coefficent matrix
     for (const auto &ell_em: m_to_ell_em_map)
     {
@@ -267,6 +293,8 @@ void chi_math::ProductQuadratureOp::BuildDiscreteToMomentOperator
     {
       VecDbl current_vec = cmt[i];
       VecDbl sum_val(ndir);
+      chi::log.Log0() << "SUM VECTOR \n";
+      chi_math::PrintVector(sum_val);
       //Do GS- and go through every previous row to get the new row
       for (size_t j = 0; j<i; ++j)
       {
@@ -278,6 +306,8 @@ void chi_math::ProductQuadratureOp::BuildDiscreteToMomentOperator
           previous_vec_hat[o] *= multiplier;
         sum_val = previous_vec_hat+sum_val;
       }
+      chi::log.Log0() << "SUM VECTOR \n";
+      chi_math::PrintVector(sum_val);
       //Set the new row
       cmt_hat[i] = cmt[i] - sum_val;
     }

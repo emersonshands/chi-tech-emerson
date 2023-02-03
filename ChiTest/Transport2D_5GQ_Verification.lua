@@ -64,11 +64,12 @@ for g=1,num_groups do
     grp[g] = chiLBSCreateGroup(phys1)
 end
 
+print(_VERSION)
 --========== ProdQuad
 sn = 8
-method = 3
-Product = true
-Triangle = false
+method = 1
+Product = false
+Triangle = true
 --scatterOrder = 4
 if (Product) then
     scatterOrder = 2*(sn-1)
