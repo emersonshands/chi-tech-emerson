@@ -235,38 +235,42 @@ void chi_math::ProductQuadratureOp::BuildDiscreteToMomentOperator
     std::vector<std::vector<double>> cmt;
     unsigned int num_angles = abscissae.size();
     unsigned int num_moms = m_to_ell_em_map.size();
-    for (const auto &ell_em: m_to_ell_em_map)
-    {
-      std::vector<double> cur_mom;
-      cur_mom.reserve(num_angles);
-
-      for (int n = 0; n < num_angles; n++)
-      {
-        const auto &cur_angle = abscissae[n];
-        double value =chi_math::Ylm(ell_em.ell, ell_em.m,
-                                    cur_angle.phi,
-                                    cur_angle.theta);
-        cur_mom.push_back(value);
-      }
-      cmt.push_back(cur_mom);
-    }
-
-
+//    for (const auto &ell_em: m_to_ell_em_map)
+//    {
+//      std::vector<double> cur_mom;
+//      cur_mom.reserve(num_angles);
+//
+//      for (int n = 0; n < num_angles; n++)
+//      {
+//        const auto &cur_angle = abscissae[n];
+//        double value =chi_math::Ylm(ell_em.ell, ell_em.m,
+//                                    cur_angle.phi,
+//                                    cur_angle.theta);
+//        double w = weights[n];
+//        cur_mom.push_back(value*w);
+//      }
+//      cmt.push_back(cur_mom);
+//    }
+//    chi_math::PrintMatrix(cmt);
+//    chi::log.Log0() << "WEIGHTS GIVEN$$$$$$$$$$$$$$$$$$$";
+//    chi_math::PrintVector(weights);
+//    chi_math::condition(cmt);
     // solve for the weights
     //change this to change normalization of the weights
-    double normalization = 4.0*M_PI;
-    std::vector<double> wt = {normalization};
-    for(size_t i = 1; i<weights.size(); ++i)
-      wt.emplace_back(0.0);
-    auto invt = chi_math::Inverse(cmt);
-    auto new_weights = chi_math::MatMul(invt,wt);
-    weights.clear();
-    weights = new_weights;
-
-    d2m_op.clear();
-    printf("the weights\n");
-    chi_math::PrintVector(weights);
-
+//    double normalization = 4.0*M_PI;
+//    std::vector<double> wt = {normalization};
+//    for(size_t i = 1; i<weights.size(); ++i)
+//      wt.emplace_back(0.0);
+//    auto invt = chi_math::Inverse(cmt);
+//    auto new_weights = chi_math::MatMul(invt,wt);
+//    weights.clear();
+//    weights = new_weights;
+//
+//    d2m_op.clear();
+//    printf("the weights\n");
+//    chi::log.Log0() << "WEIGHTS GIVEN$$$$$$$$$$$$$$$$$$$";
+//    chi_math::PrintVector(weights);
+//    chi_math::condition(cmt);
     //Make the coefficent matrix
     for (const auto &ell_em: m_to_ell_em_map)
     {
@@ -279,12 +283,12 @@ void chi_math::ProductQuadratureOp::BuildDiscreteToMomentOperator
         double value =chi_math::Ylm(ell_em.ell, ell_em.m,
                                     cur_angle.phi,
                                     cur_angle.theta);
-        double w = weights[n];
 //        printf("Weights %0.4f and points %0.4f \n",w,value);
-        cur_mom.push_back(value*w);
+        cur_mom.push_back(value);
       }
       cmt.push_back(cur_mom);
     }
+
     //Make the holder for the altered coefficients
     MatDbl cmt_hat=cmt;
     size_t ndir = cmt[0].size();
@@ -293,34 +297,45 @@ void chi_math::ProductQuadratureOp::BuildDiscreteToMomentOperator
     {
       VecDbl current_vec = cmt[i];
       VecDbl sum_val(ndir);
-      chi::log.Log0() << "SUM VECTOR \n";
-      chi_math::PrintVector(sum_val);
-      //Do GS- and go through every previous row to get the new row
-      for (size_t j = 0; j<i; ++j)
+//      chi::log.Log0() << "SUM VECTOR \n";
+//      chi_math::PrintVector(sum_val);
+      for (int j=0;j<i;++j)
       {
+        //Do GS- and go through every previous row to get the new row
         VecDbl previous_vec_hat = cmt_hat[j];
-        double multiplier = InnerProduct(previous_vec_hat,current_vec,weights)
+        double multiplier = InnerProduct(previous_vec_hat, current_vec, weights)
                             / InnerProduct(previous_vec_hat,
-                                           previous_vec_hat,weights);
-        for (int o=0;o<ndir;++o)
+                                           previous_vec_hat, weights);
+//        chi::log.Log0() << "MULTIPLIER " << multiplier;
+        for (int o = 0; o < ndir; ++o)
           previous_vec_hat[o] *= multiplier;
-        sum_val = previous_vec_hat+sum_val;
+        auto temp = sum_val + previous_vec_hat;
+        sum_val = temp;
+//        chi::log.Log0() << "New vector \n";
+//        chi_math::PrintVector(sum_val);
+        //Set the new row
       }
-      chi::log.Log0() << "SUM VECTOR \n";
-      chi_math::PrintVector(sum_val);
-      //Set the new row
       cmt_hat[i] = cmt[i] - sum_val;
     }
-
+    chi::log.Log0() << "$$$$$$$$$$$$$$$$$$$$$$$$CMT MATRIX";
+    chi_math::PrintMatrix(cmt);
+    chi::log.Log0() << "WEIGHTS GIVEN$$$$$$$$$$$$$$$$$$$";
+    chi_math::PrintVector(weights);
+    chi_math::condition(cmt);
+    chi::log.Log0() << "$$$$$$$$$$$$ CMT_HAT MATRIX";
+    chi_math::PrintMatrix(cmt_hat);
     //Now to normalize the values
     for (int i = 0; i<nmom;++i)
     {
       double normal = (4.0*M_PI)/(2.0*i+1.0);
       double multiplier = sqrt(normal /
                                InnerProduct(cmt_hat[i],cmt_hat[i],weights));
+      chi::log.Log0() << "MULTIPLIER " << multiplier;
       for (int k=0; k<ndir;++k)
         cmt_hat[i][k] *= multiplier;
     }
+    chi::log.Log0() << "$$$$$$$$$$$$ CMT_HAT MATRIX";
+    chi_math::PrintMatrix(cmt_hat);
     //Make the d2m matrix and m2d matrix
     MatDbl holder_m2d;
     for (int i = 0; i<nmom;++i)
@@ -338,6 +353,11 @@ void chi_math::ProductQuadratureOp::BuildDiscreteToMomentOperator
     //now we need to transpose the temporary m2d to get the actual m2d
     m2d_op = holder_m2d;
     d2m_op_built = true;
+    chi::log.Log0() << "############D2M#####################";
+    chi_math::PrintMatrix(d2m_op);
+    chi::log.Log0() << "############m2d#####################";
+    chi_math::PrintMatrix(m2d_op);
+
   }
   if (scattering_order < 2 * (sn - 1))
   {

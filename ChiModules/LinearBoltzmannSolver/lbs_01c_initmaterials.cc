@@ -126,7 +126,6 @@ void lbs::SteadySolver::InitMaterials()
         << " the simulation has a scattering order of "
         << options.scattering_order << "."
         << " The higher moments will therefore not be used.";
-      chi::Exit(99);
     }
     if (matid_to_xs_map[mat_id]->scattering_order > options.scattering_order)
     {
@@ -136,7 +135,6 @@ void lbs::SteadySolver::InitMaterials()
         << matid_to_xs_map[mat_id]->scattering_order << " and"
         << " the simulation has a scattering order of "
         << options.scattering_order << ".";
-      chi::Exit(99);
     }
     materials_list
       << " number of moments "

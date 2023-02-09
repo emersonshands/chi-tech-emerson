@@ -1,6 +1,6 @@
 -- 2D Transport test with Vacuum and Incident-isotropic BC.
 -- SDM: PWLD
-num_procs = 1
+num_procs = 4
 
 
 --############################################### Check num_procs
@@ -66,10 +66,10 @@ end
 
 print(_VERSION)
 --========== ProdQuad
-sn = 8
+sn = 16
 method = 1
-Product = false
-Triangle = true
+Product = true
+Triangle = false
 --scatterOrder = 4
 if (Product) then
     scatterOrder = 2*(sn-1)
@@ -109,9 +109,9 @@ chiLBSGroupsetSetAngleAggregationType(phys1,cur_gs,LBSGroupset.ANGLE_AGG_SINGLE)
 chiLBSGroupsetSetAngleAggDiv(phys1,cur_gs,1)
 chiLBSGroupsetSetGroupSubsets(phys1,cur_gs,1)
 chiLBSGroupsetSetIterativeMethod(phys1,cur_gs,KRYLOV_GMRES_CYCLES)
-chiLBSGroupsetSetResidualTolerance(phys1,cur_gs,1.1e-9)
-chiLBSGroupsetSetMaxIterations(phys1,cur_gs,300)
-chiLBSGroupsetSetGMRESRestartIntvl(phys1,cur_gs,100)
+chiLBSGroupsetSetResidualTolerance(phys1,cur_gs,1.92e-11)
+chiLBSGroupsetSetMaxIterations(phys1,cur_gs,5000)
+chiLBSGroupsetSetGMRESRestartIntvl(phys1,cur_gs,1000)
 
 
 
@@ -154,7 +154,6 @@ function luaBoundaryFunctionLeft(cell_global_id,
     psi = {}
     dof_count = 0
     anglePass = 0
-    normalVal = 1.0
     sum = 0
     if (Product) then
         quadVal = chiGetTriangleQuadrature(quad)
@@ -302,9 +301,9 @@ bsrc={}
 for g=1,num_groups do
     bsrc[g] = 0.0
 end
-bsrc[1] = 1.0/4.0/math.pi
-chiLBSSetProperty(phys1,BOUNDARY_CONDITION,XMIN,
-        LBSBoundaryTypes.INCIDENT_ISOTROPIC, bsrc);
+bsrc[1] = 1.0/4.0/math.pi/0.1
+--chiLBSSetProperty(phys1,BOUNDARY_CONDITION,XMIN,
+--        LBSBoundaryTypes.INCIDENT_ISOTROPIC, bsrc);
 --chiLBSSetProperty(phys1,BOUNDARY_CONDITION,XMAX,
 --        LBSBoundaryTypes.INCIDENT_ISOTROPIC, bsrc);
 --chiLBSSetProperty(phys1,BOUNDARY_CONDITION,YMIN,
@@ -313,9 +312,9 @@ chiLBSSetProperty(phys1,BOUNDARY_CONDITION,XMIN,
 --        LBSBoundaryTypes.INCIDENT_ISOTROPIC, bsrc);
 
 
---chiLBSSetProperty(phys1,BOUNDARY_CONDITION,XMIN,
---                        LBSBoundaryTypes.INCIDENT_ANISTROPIC_HETEROGENOUS,
---                        "luaBoundaryFunctionLeft");
+chiLBSSetProperty(phys1,BOUNDARY_CONDITION,XMIN,
+                        LBSBoundaryTypes.INCIDENT_ANISTROPIC_HETEROGENOUS,
+                        "luaBoundaryFunctionLeft");
 --chiLBSSetProperty(phys1,BOUNDARY_CONDITION,XMAX,
 --        LBSBoundaryTypes.INCIDENT_ANISTROPIC_HETEROGENOUS,
 --        "luaBoundaryFunctionRight");

@@ -39,6 +39,84 @@ void chilForm::Initialize(){}
 chilForm chilForms_CreateExternalForm(char name)
 {
 }
+/** \defgroup Lua_Callbacks Callbacks
+\ingroup Lua_chil
+
+Scripted object for handling **callbacks**. Requires that an object has function
+called **callbackFunction**.
+
+ ## Example
+\code
+SomeObject = {};
+SomeObject.callbackFunction = function(this)
+  --Handle events
+end
+--
+callBackObj = chilCallbacks.MakeCallback(SomeObject);
+chilCallbacks.PushCallback(callBackObj);
+\endcode
+*/
+
+/** Structure for defining a callback object
+
+ */
+struct callBackObject
+{
+      chilObject  parent;
+      bool        enabled;        ///< Enabled/Disabled flag
+      bool        once;           ///< Flag for terminating callback after first call [default: false]
+      float       cyclic;         ///< Cyclical execution [default: nil]
+};
+
+/** Contains all the functionality to implement callbacks.
+
+\ingroup Lua_Callbacks
+ */
+class chilCallbacks
+{
+public:
+      int count; ///<Default 0
+
+      void                PushCallback(callBackObject callBack);
+      callBackObject      MakeCallback(chilObject parentObject);
+      void                Execute();
+};
+
+/** Adds a callback object to the callback stack.
+
+\param callBack The object to be pushed.
+ */
+void chiCallbacks::PushCallback(callBackObject callBack){}
+
+/** Creates a callBack object for the given parent object.
+The parent object needs to have a method called "callbackFunction"
+and two properties: callbackReference and callbackParameters
+
+\param     parentObject The object to be pushed.
+\return    callBackObject Returns a callBackObject.
+ */
+callBackObject chiCallbacks::MakeCallback(chilObject parentObject){}
+
+/** Executes all callback functions
+
+ */
+void chiCallbacks::Execute(){}
+
+/** \brief Creates a basic orthographic camera for rendering to window coordinates.
+This camera will follow the coordinates of the scene/window its been created in.
+
+\param name char Name of the new camera [optional]
+\return chilCameraObject newCamera  Returns a camera object
+\ingroup Lua_Camera
+ -- */
+void chilCreateOrthoWindowCamera(char name) {}
+/** \brief Creates a camera that revolves around a point.
+
+\param name char Name of the new camera [optional]
+\return chilCameraObject newCamera  Returns a camera object
+\ingroup Lua_Camera
+ -- */
+void chilCreateRevolverCamera(char name) {}
 /** \brief Creates a basic orthographic camera for rendering to displayer coordinates.
 This camera will follow the coordinates of the displayer its been created with.
 
@@ -125,14 +203,6 @@ void chilCameraObject::Update(chilCameraObject self) {}
 
  -- */
 void chilCameraObject::callbackFunction(chilCameraObject self) {}
-/** \brief Creates a basic orthographic camera for rendering to window coordinates.
-This camera will follow the coordinates of the scene/window its been created in.
-
-\param name char Name of the new camera [optional]
-\return chilCameraObject newCamera  Returns a camera object
-\ingroup Lua_Camera
- -- */
-void chilCreateOrthoWindowCamera(char name) {}
 /** \brief Creates a basic thirdperson camera.
 
 \param name char Name of the new camera [optional]
@@ -140,74 +210,4 @@ void chilCreateOrthoWindowCamera(char name) {}
 \ingroup Lua_Camera
  -- */
 void chilCreateThirdPersonCamera(char name) {}
-/** \brief Creates a camera that revolves around a point.
-
-\param name char Name of the new camera [optional]
-\return chilCameraObject newCamera  Returns a camera object
-\ingroup Lua_Camera
- -- */
-void chilCreateRevolverCamera(char name) {}
-/** \defgroup Lua_Callbacks Callbacks
-\ingroup Lua_chil
-
-Scripted object for handling **callbacks**. Requires that an object has function
-called **callbackFunction**.
-
- ## Example
-\code
-SomeObject = {};
-SomeObject.callbackFunction = function(this)
-  --Handle events
-end
---
-callBackObj = chilCallbacks.MakeCallback(SomeObject);
-chilCallbacks.PushCallback(callBackObj);
-\endcode
-*/
-
-/** Structure for defining a callback object
-
- */
-struct callBackObject
-{
-      chilObject  parent;
-      bool        enabled;        ///< Enabled/Disabled flag
-      bool        once;           ///< Flag for terminating callback after first call [default: false]
-      float       cyclic;         ///< Cyclical execution [default: nil]
-};
-
-/** Contains all the functionality to implement callbacks.
-
-\ingroup Lua_Callbacks
- */
-class chilCallbacks
-{
-public:
-      int count; ///<Default 0
-
-      void                PushCallback(callBackObject callBack);
-      callBackObject      MakeCallback(chilObject parentObject);
-      void                Execute();
-};
-
-/** Adds a callback object to the callback stack.
-
-\param callBack The object to be pushed.
- */
-void chiCallbacks::PushCallback(callBackObject callBack){}
-
-/** Creates a callBack object for the given parent object.
-The parent object needs to have a method called "callbackFunction"
-and two properties: callbackReference and callbackParameters
-
-\param     parentObject The object to be pushed.
-\return    callBackObject Returns a callBackObject.
- */
-callBackObject chiCallbacks::MakeCallback(chilObject parentObject){}
-
-/** Executes all callback functions
-
- */
-void chiCallbacks::Execute(){}
-
 };

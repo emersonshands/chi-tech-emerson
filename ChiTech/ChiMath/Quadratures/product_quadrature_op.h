@@ -6,6 +6,7 @@
 #include "ChiMath/Quadratures/LegendrePoly/legendrepoly.h"
 #include "ChiMath/chi_math_04_Matrix_operations.h"
 #include "ChiMath/Quadratures/angular_quadrature_base.h"
+#include "ChiMath/chi_math_06_condition.h"
 
 namespace chi_math
 {
