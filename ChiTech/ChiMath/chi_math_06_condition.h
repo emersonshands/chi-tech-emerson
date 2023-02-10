@@ -4,7 +4,6 @@
 #include "chi_math.h"
 #include "PETScUtils/petsc_utils.h"
 #include "petsc.h"
-#include "petscsvd.h"
 namespace chi_math
 {
   void condition(const MatDbl &A);
