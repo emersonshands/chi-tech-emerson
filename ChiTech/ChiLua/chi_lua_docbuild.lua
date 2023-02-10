@@ -321,7 +321,7 @@ function IncludeIntoMaster(master_file,slave_file_name)
 		return 0;
 	end
 
-	line = in_file:read("L")
+	line = in_file:read("*line")
 	while (line ~= nil) do
 
 		incl_statement = string.find(line,"#include",0,true)
@@ -339,7 +339,7 @@ function IncludeIntoMaster(master_file,slave_file_name)
 			master_file:write(line)
 		end
 
-		line = in_file:read("L")
+		line = in_file:read("*line")
 	end
 	in_file:close()
 end

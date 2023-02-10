@@ -114,6 +114,7 @@ double chi_math::ProductQuadratureOp::InnerProduct(const VecDbl& f,
 void chi_math::ProductQuadratureOp::MakeHarmonicIndices
 (unsigned int,  int dimension)
 {
+  if(not m_to_ell_em_map.empty()) return;
   printf("MAKING CUSTOM HARMONICS\n");
   const int nquad = sn;
   int Lmax = 2 * (nquad - 1);
@@ -317,13 +318,13 @@ void chi_math::ProductQuadratureOp::BuildDiscreteToMomentOperator
       }
       cmt_hat[i] = cmt[i] - sum_val;
     }
-    chi::log.Log0() << "$$$$$$$$$$$$$$$$$$$$$$$$CMT MATRIX";
-    chi_math::PrintMatrix(cmt);
-    chi::log.Log0() << "WEIGHTS GIVEN$$$$$$$$$$$$$$$$$$$";
-    chi_math::PrintVector(weights);
-    chi_math::condition(cmt);
-    chi::log.Log0() << "$$$$$$$$$$$$ CMT_HAT MATRIX";
-    chi_math::PrintMatrix(cmt_hat);
+//    chi::log.Log0() << "$$$$$$$$$$$$$$$$$$$$$$$$CMT MATRIX";
+//    chi_math::PrintMatrix(cmt);
+//    chi::log.Log0() << "WEIGHTS GIVEN$$$$$$$$$$$$$$$$$$$";
+//    chi_math::PrintVector(weights);
+//    chi_math::condition(cmt);
+//    chi::log.Log0() << "$$$$$$$$$$$$ CMT_HAT MATRIX";
+//    chi_math::PrintMatrix(cmt_hat);
     //Now to normalize the values
     for (int i = 0; i<nmom;++i)
     {
@@ -334,8 +335,8 @@ void chi_math::ProductQuadratureOp::BuildDiscreteToMomentOperator
       for (int k=0; k<ndir;++k)
         cmt_hat[i][k] *= multiplier;
     }
-    chi::log.Log0() << "$$$$$$$$$$$$ CMT_HAT MATRIX";
-    chi_math::PrintMatrix(cmt_hat);
+//    chi::log.Log0() << "$$$$$$$$$$$$ CMT_HAT MATRIX";
+//    chi_math::PrintMatrix(cmt_hat);
     //Make the d2m matrix and m2d matrix
     MatDbl holder_m2d;
     for (int i = 0; i<nmom;++i)
@@ -353,12 +354,13 @@ void chi_math::ProductQuadratureOp::BuildDiscreteToMomentOperator
     //now we need to transpose the temporary m2d to get the actual m2d
     m2d_op = holder_m2d;
     d2m_op_built = true;
-    chi::log.Log0() << "############D2M#####################";
-    chi_math::PrintMatrix(d2m_op);
-    chi::log.Log0() << "############m2d#####################";
-    chi_math::PrintMatrix(m2d_op);
+//    chi::log.Log0() << "############D2M#####################";
+//    chi_math::PrintMatrix(d2m_op);
+//    chi::log.Log0() << "############m2d#####################";
+//    chi_math::PrintMatrix(m2d_op);
 
   }
+  chi_math::condition(d2m_op);
   if (scattering_order < 2 * (sn - 1))
   {
     FilterMoments(scattering_order);

@@ -105,13 +105,13 @@ gs0 = chiLBSCreateGroupset(phys1)
 cur_gs = gs0
 chiLBSGroupsetAddGroups(phys1,cur_gs,0,num_groups-1)
 chiLBSGroupsetSetQuadrature(phys1,cur_gs,quad)
-chiLBSGroupsetSetAngleAggregationType(phys1,cur_gs,LBSGroupset.ANGLE_AGG_SINGLE)
+chiLBSGroupsetSetAngleAggregationType(phys1,cur_gs,2)--LBSGroupset.ANGLE_AGG_SINGLE)
 chiLBSGroupsetSetAngleAggDiv(phys1,cur_gs,1)
 chiLBSGroupsetSetGroupSubsets(phys1,cur_gs,1)
 chiLBSGroupsetSetIterativeMethod(phys1,cur_gs,KRYLOV_GMRES_CYCLES)
-chiLBSGroupsetSetResidualTolerance(phys1,cur_gs,1.92e-11)
+chiLBSGroupsetSetResidualTolerance(phys1,cur_gs,1.92e-8)
 chiLBSGroupsetSetMaxIterations(phys1,cur_gs,5000)
-chiLBSGroupsetSetGMRESRestartIntvl(phys1,cur_gs,1000)
+chiLBSGroupsetSetGMRESRestartIntvl(phys1,cur_gs,5000)
 
 
 
