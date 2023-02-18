@@ -2,31 +2,35 @@
 
 void chi_math::condition(const MatDbl &A)
 {
-//  PetscViewer View;
-  Mat B;
-  MatCreateSeqDense(PETSC_COMM_WORLD,A.size(), A[0].size(),PETSC_NULL,&B);
-  MatSetType(B,MATMPIAIJ);
-  MatSetSizes(B,PETSC_DECIDE,PETSC_DECIDE,
-              A.size(), A[0].size());
-  MatView(B,PETSC_VIEWER_STDOUT_WORLD);
-  PetscInt Row;
-  PetscInt Col;
-  MatGetSize(B,&Row,&Col);
-
-  //  MatSetOption(B, MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_FALSE);
-  int RowI[Row];
-  int ColI[Col];
-  for(int k;k<Row;++k) RowI[k] = k;
-  for(int k;k<Col;++k) ColI[k] = k;
-  PetscScalar arr_read[Row*Col];
-  for
-  MatSetValue(B,Row,RowI,Col,ColI,)
+//  //Create the PETSC matrix
+//  Mat B;
+//  //Allocate size based on the pointer to A
+//  MatCreateSeqDense(PETSC_COMM_WORLD,A.size(), A[0].size(),PETSC_NULL,&B);
+//  // Let PETSC decide on the local allocation
+//  MatSetSizes(B,PETSC_DECIDE,PETSC_DECIDE,
+//              A.size(), A[0].size());
+//  //Print out the matrix
+//  MatView(B,PETSC_VIEWER_STDOUT_WORLD);
+//  //Get PETSC ints for the global sizes
+//  PetscInt Row;
+//  PetscInt Col;
+//  MatGetSize(B,&Row,&Col);
+//  //Fill the petsc matrix then build it
+//  for(int k=0;k<Row;++k)
+//    for(int j=0;j<Col;++j)
+//      MatSetValue(B,k,j,A[k][j],INSERT_VALUES);
+//  MatAssemblyBegin(B,MAT_FINAL_ASSEMBLY);
+//  MatAssemblyEnd(B,MAT_FINAL_ASSEMBLY);
+//
+//  //Setting the options for the chi-tech KSP macro
 //  std::string in_solver_name = "SVD_SOLVER";
 //  std::string in_solver_type = "KSPGMRES";
+//  //Precondition must be svd
 //  std::string in_preconditioner_type = "svd";
+//  //Arbitrary
 //  double in_relative_residual_tolerance = 1e-8;
 //  int64_t in_maximum_iterations = 300;
-//  //  -pc_type svd -pc_svd_monitor
+//  // Use the macro
 //  auto SVD_SOLVER = chi_math::PETScUtils::CreateCommonKrylovSolverSetup(
 //    B,
 //  in_solver_name,
@@ -34,9 +38,28 @@ void chi_math::condition(const MatDbl &A)
 //  in_preconditioner_type,
 //  in_relative_residual_tolerance,
 //  in_maximum_iterations);
+//  //This is a preconditioner option, it should tell the svd
+//  // to print out extreme eigen values
 //  PCSetOptionsPrefix(SVD_SOLVER.pc,"pc_svd_monitor");
+//
+//  //set up the extra vectors we dont care about to solve for
+//  Vec b;
+//  VecSetSizes(b,PETSC_DECIDE,Row);
+//  VecSet(b,0.0);
+//  Vec x;
+//  VecSetSizes(x,PETSC_DECIDE,Row);
+//  VecSet(x,0.0);
+//  //Solve for 0 vector with 0 vector matrix
+//  //This should force the preconditioning and simply solve for 0
+//  KSPSolve(SVD_SOLVER.ksp,b,x);
+//  //De-allocate the resources
+//  MatDestroy(&B);
+//  VecDestroy(&b);
+//  VecDestroy(&x);
+//  KSPDestroy(&SVD_SOLVER.ksp);
 
-//  //Grab the first maximum eigen value
+
+//    //Grab the first maximum eigen value
 //  //Solve for eigen values
 //  MatDbl D = chi_math::MatMul(A,chi_math::Transpose(A));
 //  size_t R = D.size();

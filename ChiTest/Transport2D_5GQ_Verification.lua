@@ -1,6 +1,6 @@
 -- 2D Transport test with Vacuum and Incident-isotropic BC.
 -- SDM: PWLD
-num_procs = 4
+num_procs = 20
 
 
 --############################################### Check num_procs
@@ -41,19 +41,19 @@ materials[1] = chiPhysicsAddMaterial("Test Material");
 
 chiPhysicsMaterialAddProperty(materials[1],TRANSPORT_XSECTIONS)
 
-chiPhysicsMaterialAddProperty(materials[1],ISOTROPIC_MG_SOURCE)
+--chiPhysicsMaterialAddProperty(materials[1],ISOTROPIC_MG_SOURCE)
 
 
 num_groups = 1
 chiPhysicsMaterialSetProperty(materials[1],TRANSPORT_XSECTIONS,
         CHI_XSFILE,"ChiTest/xs_quad_test_GQ.cxs")
 
-src={}
-for g=1,num_groups do
-    src[g] = 0.0
-end
+--src={}
+--for g=1,num_groups do
+--    src[g] = 0.0
+--end
 --src[1] = 1.0
-chiPhysicsMaterialSetProperty(materials[1],ISOTROPIC_MG_SOURCE,FROM_ARRAY,src)
+--chiPhysicsMaterialSetProperty(materials[1],ISOTROPIC_MG_SOURCE,FROM_ARRAY,src)
 
 --############################################### Setup Physics
 phys1 = chiLBSCreateSolver()
@@ -64,12 +64,15 @@ for g=1,num_groups do
     grp[g] = chiLBSCreateGroup(phys1)
 end
 
-print(_VERSION)
 --========== ProdQuad
 sn = 16
 method = 1
 Product = true
 Triangle = false
+--scatterOrder = 2*(sn-1)
+--quad = chiCreateProductQuadrature(GAUSS_LEGENDRE_CHEBYSHEV,sn/2,sn/2)
+--chiOptimizeAngularQuadratureForPolarSymmetry(quad,4.0*math.pi)
+
 --scatterOrder = 4
 if (Product) then
     scatterOrder = 2*(sn-1)
@@ -87,31 +90,33 @@ if (Product) then
         chiLog(LOG_0, "Azimu " .. tostring(tab[pl].azimuthal))
     end
 end
-if (Triangle) then
-    scatterOrder = sn
-    quad = chiCreateAngularQuadratureTriangle(method,sn)
-
-    tab = chiGetTriangleQuadrature(quad)
-    chiLog(LOG_0, "Checking Values of Quadrature")
-    for pl=1,rawlen(tab) do
-        chiLog(LOG_0, "Direction " .. tostring(pl))
-        chiLog(LOG_0, "Weight " .. tostring(tab[pl].weight))
-        chiLog(LOG_0, "Polar " .. tostring(tab[pl].polar))
-        chiLog(LOG_0, "Azimu " .. tostring(tab[pl].azimuthal))
-    end
-end
+--if (Triangle) then
+--    scatterOrder = sn
+--    quad = chiCreateAngularQuadratureTriangle(method,sn)
+--
+--    tab = chiGetTriangleQuadrature(quad)
+--    chiLog(LOG_0, "Checking Values of Quadrature")
+--    for pl=1,rawlen(tab) do
+--        chiLog(LOG_0, "Direction " .. tostring(pl))
+--        chiLog(LOG_0, "Weight " .. tostring(tab[pl].weight))
+--        chiLog(LOG_0, "Polar " .. tostring(tab[pl].polar))
+--        chiLog(LOG_0, "Azimu " .. tostring(tab[pl].azimuthal))
+--    end
+--end
 --========== Groupset def
 gs0 = chiLBSCreateGroupset(phys1)
 cur_gs = gs0
 chiLBSGroupsetAddGroups(phys1,cur_gs,0,num_groups-1)
 chiLBSGroupsetSetQuadrature(phys1,cur_gs,quad)
-chiLBSGroupsetSetAngleAggregationType(phys1,cur_gs,2)--LBSGroupset.ANGLE_AGG_SINGLE)
+chiLBSGroupsetSetAngleAggregationType(phys1,cur_gs,LBSGroupset.ANGLE_AGG_SINGLE)
 chiLBSGroupsetSetAngleAggDiv(phys1,cur_gs,1)
 chiLBSGroupsetSetGroupSubsets(phys1,cur_gs,1)
-chiLBSGroupsetSetIterativeMethod(phys1,cur_gs,KRYLOV_GMRES_CYCLES)
+chiLBSGroupsetSetIterativeMethod(phys1,cur_gs,KRYLOV_GMRES)
+--chiLBSGroupsetSetIterativeMethod(phys1,cur_gs,NPT_CLASSICRICHARDSON)
 chiLBSGroupsetSetResidualTolerance(phys1,cur_gs,1.92e-8)
-chiLBSGroupsetSetMaxIterations(phys1,cur_gs,5000)
-chiLBSGroupsetSetGMRESRestartIntvl(phys1,cur_gs,5000)
+chiLBSGroupsetSetMaxIterations(phys1,cur_gs,150000)
+chiLBSGroupsetSetGMRESRestartIntvl(phys1,cur_gs,10)
+chiLBSGroupsetSetWGDSA(phys1,cur_gs,30,1.0e-8,true)
 
 
 
@@ -156,7 +161,7 @@ function luaBoundaryFunctionLeft(cell_global_id,
     anglePass = 0
     sum = 0
     if (Product) then
-        quadVal = chiGetTriangleQuadrature(quad)
+        quadVal = chiGetProductQuadrature(quad)
     end
     if (Triangle) then
         quadVal = chiGetTriangleQuadrature(quad)
@@ -196,112 +201,112 @@ function luaBoundaryFunctionLeft(cell_global_id,
     return psi
 end
 
-----############################EXTRA BC##################################
-function luaBoundaryFunctionRight(cell_global_id,
-                              material_id,
-                              location,
-                              normal,
-                              quadrature_angle_indices,
-                              quadrature_angle_vectors,
-                              quadrature_phi_theta_angles,
-                              group_indices)
-    num_angles = rawlen(quadrature_angle_vectors)
-    num_groups = rawlen(group_indices)
-    psi = {}
-    dof_count = 0
-    anglePass = 0
-
-    normalVal = 1.0/4.0/3.14159265359/1.0
-    for ni=1,num_angles do
-        omega = quadrature_angle_vectors[ni]
-        phi_theta = quadrature_phi_theta_angles[ni]
-        for gi=1,num_groups do
-            g = group_indices[gi]
-
-            value = 0.0
-            if (phi_theta.phi>1.57079 and phi_theta.phi<4.71238) then
-                value = normalVal
-            end
-
-            dof_count = dof_count + 1
-            psi[dof_count] = value
-        end
-    end
-    return psi
-end
-function luaBoundaryFunctionBottom(cell_global_id,
-                              material_id,
-                              location,
-                              normal,
-                              quadrature_angle_indices,
-                              quadrature_angle_vectors,
-                              quadrature_phi_theta_angles,
-                              group_indices)
-    num_angles = rawlen(quadrature_angle_vectors)
-    num_groups = rawlen(group_indices)
-    psi = {}
-    dof_count = 0
-    anglePass = 0
-
-    normalVal = 1.0/4.0/3.14159265359/1.0
-    for ni=1,num_angles do
-        omega = quadrature_angle_vectors[ni]
-        phi_theta = quadrature_phi_theta_angles[ni]
-        for gi=1,num_groups do
-            g = group_indices[gi]
-
-            value = 0.0
-            if (phi_theta.phi>0 and phi_theta.phi<3.14159265359) then
-                value = normalVal
-            end
-
-            dof_count = dof_count + 1
-            psi[dof_count] = value
-        end
-    end
-    return psi
-end
-function luaBoundaryFunctionTop(cell_global_id,
-                              material_id,
-                              location,
-                              normal,
-                              quadrature_angle_indices,
-                              quadrature_angle_vectors,
-                              quadrature_phi_theta_angles,
-                              group_indices)
-    num_angles = rawlen(quadrature_angle_vectors)
-    num_groups = rawlen(group_indices)
-    psi = {}
-    dof_count = 0
-    anglePass = 0
-
-    normalVal = 1.0/4.0/3.14159265359/1.0
-    for ni=1,num_angles do
-        omega = quadrature_angle_vectors[ni]
-        phi_theta = quadrature_phi_theta_angles[ni]
-        for gi=1,num_groups do
-            g = group_indices[gi]
-
-            value = 0.0
-            if (phi_theta.phi>3.14159265359 and phi_theta.phi<6.28318530718) then
-                value = normalVal
-            end
-
-            dof_count = dof_count + 1
-            psi[dof_count] = value
-        end
-    end
-    return psi
-end
+------############################EXTRA BC##################################
+--function luaBoundaryFunctionRight(cell_global_id,
+--                              material_id,
+--                              location,
+--                              normal,
+--                              quadrature_angle_indices,
+--                              quadrature_angle_vectors,
+--                              quadrature_phi_theta_angles,
+--                              group_indices)
+--    num_angles = rawlen(quadrature_angle_vectors)
+--    num_groups = rawlen(group_indices)
+--    psi = {}
+--    dof_count = 0
+--    anglePass = 0
+--
+--    normalVal = 1.0/4.0/3.14159265359/1.0
+--    for ni=1,num_angles do
+--        omega = quadrature_angle_vectors[ni]
+--        phi_theta = quadrature_phi_theta_angles[ni]
+--        for gi=1,num_groups do
+--            g = group_indices[gi]
+--
+--            value = 0.0
+--            if (phi_theta.phi>1.57079 and phi_theta.phi<4.71238) then
+--                value = normalVal
+--            end
+--
+--            dof_count = dof_count + 1
+--            psi[dof_count] = value
+--        end
+--    end
+--    return psi
+--end
+--function luaBoundaryFunctionBottom(cell_global_id,
+--                              material_id,
+--                              location,
+--                              normal,
+--                              quadrature_angle_indices,
+--                              quadrature_angle_vectors,
+--                              quadrature_phi_theta_angles,
+--                              group_indices)
+--    num_angles = rawlen(quadrature_angle_vectors)
+--    num_groups = rawlen(group_indices)
+--    psi = {}
+--    dof_count = 0
+--    anglePass = 0
+--
+--    normalVal = 1.0/4.0/3.14159265359/1.0
+--    for ni=1,num_angles do
+--        omega = quadrature_angle_vectors[ni]
+--        phi_theta = quadrature_phi_theta_angles[ni]
+--        for gi=1,num_groups do
+--            g = group_indices[gi]
+--
+--            value = 0.0
+--            if (phi_theta.phi>0 and phi_theta.phi<3.14159265359) then
+--                value = normalVal
+--            end
+--
+--            dof_count = dof_count + 1
+--            psi[dof_count] = value
+--        end
+--    end
+--    return psi
+--end
+--function luaBoundaryFunctionTop(cell_global_id,
+--                              material_id,
+--                              location,
+--                              normal,
+--                              quadrature_angle_indices,
+--                              quadrature_angle_vectors,
+--                              quadrature_phi_theta_angles,
+--                              group_indices)
+--    num_angles = rawlen(quadrature_angle_vectors)
+--    num_groups = rawlen(group_indices)
+--    psi = {}
+--    dof_count = 0
+--    anglePass = 0
+--
+--    normalVal = 1.0/4.0/3.14159265359/1.0
+--    for ni=1,num_angles do
+--        omega = quadrature_angle_vectors[ni]
+--        phi_theta = quadrature_phi_theta_angles[ni]
+--        for gi=1,num_groups do
+--            g = group_indices[gi]
+--
+--            value = 0.0
+--            if (phi_theta.phi>3.14159265359 and phi_theta.phi<6.28318530718) then
+--                value = normalVal
+--            end
+--
+--            dof_count = dof_count + 1
+--            psi[dof_count] = value
+--        end
+--    end
+--    return psi
+--end
 ----############################EXTRA BC##################################
 --############################################### Set boundary conditions
 
 
-bsrc={}
-for g=1,num_groups do
-    bsrc[g] = 0.0
-end
-bsrc[1] = 1.0/4.0/math.pi/0.1
+--bsrc={}
+--for g=1,num_groups do
+--    bsrc[g] = 0.0
+--end
+--bsrc[1] = 1.0 --/4.0/math.pi/0.1
 --chiLBSSetProperty(phys1,BOUNDARY_CONDITION,XMIN,
 --        LBSBoundaryTypes.INCIDENT_ISOTROPIC, bsrc);
 --chiLBSSetProperty(phys1,BOUNDARY_CONDITION,XMAX,
@@ -370,7 +375,7 @@ chiLog(LOG_0,"Ymin")
 chiLog(LOG_0, tostring(leakage3[1]))
 
 --############################################### Plots
-if (chi_location_id == 0 and master_export == nil) then
+if (chi_location_id == 0 and not master_export == nil) then
     local handle = io.popen("python3 ZPFFI00.py")
 end
 

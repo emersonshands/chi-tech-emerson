@@ -3,6 +3,9 @@
 #include "chi_runtime.h"
 #include "chi_log.h"
 #include "algorithm"
+#include <fstream>
+#include <iostream>
+#include <string>
 
 chi_math::ProductQuadratureOp::ProductQuadratureOp(const
 chi_math::ProductQuadrature&
@@ -144,27 +147,35 @@ void chi_math::ProductQuadratureOp::MakeHarmonicIndices
 void chi_math::ProductQuadratureOp::BuildDiscreteToMomentOperator
 (unsigned int scattering_order,int dimension)
 {
-  chi::log.Log0() <<
-                  "$$$$$$$$$$$$$$$$$$$$$$$$$$\n Using the self made d2m\n$$$$$$$$$$$$$$$$$\n";
-  chi::log.Log0() << "THIS IS SCATTERING ORDER " << scattering_order <<
-                  " AND DIMENSIONS " << dimension << "\n";
+//  chi::log.Log0() <<
+//                  "$$$$$$$$$$$$$$$$$$$$$$$$$$\n Using the self made d2m\n$$$$$$$$$$$$$$$$$\n";
+//  chi::log.Log0() << "THIS IS SCATTERING ORDER " << scattering_order <<
+//                  " AND DIMENSIONS " << dimension << "\n";
   if (d2m_op_built) return;
   MakeHarmonicIndices(sn,dimension);
   if (method == 1)
   {
     if (not m2d_op_built) BuildMomentToDiscreteOperator(sn,dimension);
-    chi::log.Log0() << "Building d2m";
+//    chi::log.Log0() << "Building d2m";
     d2m_op = chi_math::Transpose(chi_math::Inverse(m2d_op));
+//    std::ofstream DwriteFile("/home/grads/e/emersonshands01/CLASSwork/d2m.txt",std::ofstream::out);
+//
+//    for (int k=0;k<d2m_op[0].size();++k)
+//    {
+//      for (auto & j : d2m_op)
+//        DwriteFile << j[k] << " ";
+//      DwriteFile << "\n";
+//    }
     int i =0;
     weights.clear();
-    chi::log.Log0() << "SIZE OF THE WEIGHTS " << weights.size();
+//    chi::log.Log0() << "SIZE OF THE WEIGHTS " << weights.size();
     for(const auto& wt : d2m_op[0])
     {
       weights.push_back(wt);
-      chi::log.Log0()<< "RESET WEIGHTS " << weights[i];
+//      chi::log.Log0()<< "RESET WEIGHTS " << weights[i];
       ++i;
     }
-    chi::log.Log0() << "SIZE OF THE WEIGHTS " << weights.size();
+//    chi::log.Log0() << "SIZE OF THE WEIGHTS " << weights.size();
     d2m_op_built = true;
   }
   if (method==2)
@@ -360,7 +371,7 @@ void chi_math::ProductQuadratureOp::BuildDiscreteToMomentOperator
 //    chi_math::PrintMatrix(m2d_op);
 
   }
-  chi_math::condition(d2m_op);
+//  chi_math::condition(d2m_op);
   if (scattering_order < 2 * (sn - 1))
   {
     FilterMoments(scattering_order);
@@ -370,6 +381,8 @@ void chi_math::ProductQuadratureOp::BuildDiscreteToMomentOperator
 void chi_math::ProductQuadratureOp::BuildMomentToDiscreteOperator
 (unsigned int scattering_order,int dimension)
 {
+//  std::ofstream writeFile("/home/grads/e/emersonshands01/CLASSwork/M2D.txt",std::ofstream::out);
+
   if (m2d_op_built) return;
   MakeHarmonicIndices(sn,dimension);
   if (method ==1)
@@ -393,11 +406,13 @@ void chi_math::ProductQuadratureOp::BuildMomentToDiscreteOperator
                                      cur_angle.phi,
                                      cur_angle.theta);
         cur_mom.push_back(value);
+//        writeFile << value << " ";
       }
-
+//      writeFile << "\n";
       m2d_op.push_back(cur_mom);
     }//for m
     m2d_op_built = true;
+//    writeFile.close();
   }
   if (method == 2)
   {
