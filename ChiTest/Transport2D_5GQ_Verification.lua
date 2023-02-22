@@ -66,7 +66,7 @@ end
 
 --========== ProdQuad
 sn = 16
-method = 1
+method = 3
 Product = true
 Triangle = false
 --scatterOrder = 2*(sn-1)
@@ -78,7 +78,8 @@ if (Product) then
     scatterOrder = 2*(sn-1)
     baseline = chiCreateProductQuadrature(GAUSS_LEGENDRE_CHEBYSHEV,sn/2,sn/2)
     chiOptimizeAngularQuadratureForPolarSymmetry(baseline,4.0*math.pi)
-    quad = chiCreateProductQuadratureOperator(baseline,method,sn)
+    --quad = chiCreateProductQuadratureOperator(baseline,method,sn)
+    quad = baseline
 
     tab = chiGetProductQuadrature(quad)
     chiLog(LOG_0, "Checking Values of Quadrature")
@@ -116,7 +117,7 @@ chiLBSGroupsetSetIterativeMethod(phys1,cur_gs,KRYLOV_GMRES)
 chiLBSGroupsetSetResidualTolerance(phys1,cur_gs,1.92e-8)
 chiLBSGroupsetSetMaxIterations(phys1,cur_gs,150000)
 chiLBSGroupsetSetGMRESRestartIntvl(phys1,cur_gs,10)
-chiLBSGroupsetSetWGDSA(phys1,cur_gs,30,1.0e-8,true)
+chiLBSGroupsetSetWGDSA(phys1,cur_gs,30,1.0e-10,true)
 
 
 

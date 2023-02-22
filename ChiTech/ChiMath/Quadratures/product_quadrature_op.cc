@@ -6,6 +6,7 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <iomanip>
 
 chi_math::ProductQuadratureOp::ProductQuadratureOp(const
 chi_math::ProductQuadrature&
@@ -122,7 +123,7 @@ void chi_math::ProductQuadratureOp::MakeHarmonicIndices
   const int nquad = sn;
   int Lmax = 2 * (nquad - 1);
   m_to_ell_em_map.clear();
-  for (int ell = 0; ell <= Lmax; ++ell)
+  for (int ell = 0; ell <= Lmax+1; ++ell)
     for (int m = -ell; m <= ell; m += 1)
     {
       if (ell >= nquad)
@@ -141,6 +142,8 @@ void chi_math::ProductQuadratureOp::MakeHarmonicIndices
         m_to_ell_em_map.emplace_back(ell, m);
         printf("Harmonics found l=%i m=%i \n",ell,m);
       }
+//      m_to_ell_em_map.emplace_back(ell, m);
+//      printf("Harmonics found l=%i m=%i \n", ell, m);
     }
 }
 
@@ -156,27 +159,33 @@ void chi_math::ProductQuadratureOp::BuildDiscreteToMomentOperator
   if (method == 1)
   {
     if (not m2d_op_built) BuildMomentToDiscreteOperator(sn,dimension);
-//    chi::log.Log0() << "Building d2m";
+    chi::log.Log0() << "Building d2m";
     d2m_op = chi_math::Transpose(chi_math::Inverse(m2d_op));
-//    std::ofstream DwriteFile("/home/grads/e/emersonshands01/CLASSwork/d2m.txt",std::ofstream::out);
+////    std::ofstream DwriteFile("/home/grads/e/emersonshands01/CLASSwork/d2m.txt",std::ofstream::out);
 //
 //    for (int k=0;k<d2m_op[0].size();++k)
 //    {
 //      for (auto & j : d2m_op)
-//        DwriteFile << j[k] << " ";
+//        DwriteFile << std::setprecision(16) << j[k] << " ";
 //      DwriteFile << "\n";
 //    }
+//    DwriteFile.close();
+
     int i =0;
+    auto w_copy = weights;
     weights.clear();
 //    chi::log.Log0() << "SIZE OF THE WEIGHTS " << weights.size();
-    for(const auto& wt : d2m_op[0])
+//    std::cout.precision(18);
+    for(const double& wt : d2m_op[0])
     {
       weights.push_back(wt);
-//      chi::log.Log0()<< "RESET WEIGHTS " << weights[i];
+//      std::cout << "\nCheck " << " " << weights[i] << " OLD VALUE " << w_copy[i];
       ++i;
     }
+
 //    chi::log.Log0() << "SIZE OF THE WEIGHTS " << weights.size();
     d2m_op_built = true;
+//    chi::Exit(99);
   }
   if (method==2)
   {
@@ -381,8 +390,7 @@ void chi_math::ProductQuadratureOp::BuildDiscreteToMomentOperator
 void chi_math::ProductQuadratureOp::BuildMomentToDiscreteOperator
 (unsigned int scattering_order,int dimension)
 {
-//  std::ofstream writeFile("/home/grads/e/emersonshands01/CLASSwork/M2D.txt",std::ofstream::out);
-
+  std::cout.precision(16);
   if (m2d_op_built) return;
   MakeHarmonicIndices(sn,dimension);
   if (method ==1)
@@ -391,13 +399,15 @@ void chi_math::ProductQuadratureOp::BuildMomentToDiscreteOperator
     const size_t num_angles = abscissae.size();
     const size_t num_moms = m_to_ell_em_map.size();
 
-    const auto normalization = 4.0*M_PI;
+    const double normalization = 4.0*M_PI;
+//    std::ofstream writeFile("/home/grads/e/emersonshands01/CLASSwork/M2D.txt",std::ofstream::out);
 
     for (const auto& ell_em : m_to_ell_em_map)
     {
+//      double integral = 0.0;
       std::vector<double> cur_mom;
       cur_mom.reserve(num_angles);
-
+//      chi::log.Log0() << "HARMONIC l=" << ell_em.ell << " m=" << ell_em.m;
       for (int n=0; n<num_angles; n++)
       {
         const auto& cur_angle = abscissae[n];
@@ -405,14 +415,25 @@ void chi_math::ProductQuadratureOp::BuildMomentToDiscreteOperator
                        chi_math::Ylm(ell_em.ell,ell_em.m,
                                      cur_angle.phi,
                                      cur_angle.theta);
+//        integral += weights[n]*(chi_math::Ylm(ell_em.ell,ell_em.m,
+//                                  cur_angle.phi,
+//                                  cur_angle.theta)*
+//                                    chi_math::Ylm(ell_em.ell,ell_em.m,
+//                                                                 cur_angle.phi,
+//                                                                 cur_angle.theta));
         cur_mom.push_back(value);
-//        writeFile << value << " ";
+//        writeFile << std::setprecision(16) << value << " ";
       }
+//      chi::log.Log0() << "####################";
+//      chi::log.Log0() << "Integral Value " << integral;
+//      chi::log.Log0() << "4pi/2l+1 " << 4.0*M_PI/(2.0*ell_em.ell+1.0);
+//      chi::log.Log0() << "Ratio of error " << (4.0*M_PI/(2.0*ell_em.ell+1.0)-integral)/4.0*M_PI/(2.0*ell_em.ell+1.0);
 //      writeFile << "\n";
       m2d_op.push_back(cur_mom);
     }//for m
     m2d_op_built = true;
 //    writeFile.close();
+//    chi::Exit(99);
   }
   if (method == 2)
   {
