@@ -33,7 +33,7 @@ TriangleInit()
 {
 
   chi::log.Log0() << "Given the method "
-  << method << "\nGiven sn " << sn;
+                  << method << "\nGiven sn " << sn;
 
   if (method != 1 and method != 2 and method !=3)
   {
@@ -61,6 +61,15 @@ TriangleInit()
   // that of the quadrature
   const auto old_omega = chi_math::QuadratureGaussLegendre(sn);
   // formulate the triangular quadrature
+  VecDbl newZi;
+  VecDbl newWeights;
+  std::ofstream DwriteFile("/home/grads/e/emersonshands01/CLASSwork/CheckTriangle.txt",std::ofstream::out);
+  for(size_t pos =0;pos<old_omega.qpoints.size();++pos)
+  {
+    if (old_omega.qpoints[pos].x < 0) continue;
+    newZi.push_back(old_omega.qpoints[pos].x);
+    newWeights.push_back(old_omega.weights[pos]);
+  }
   int num_div = 1;
   int weightPos =0;
   for(auto u : old_omega.qpoints)
@@ -84,50 +93,65 @@ TriangleInit()
       chi::log.Log0() << " Z COSINE " << new_z_value;
       double phi = deltaVPhi/2.0 + (double)v*deltaVPhi;
       double theta = acos(new_z_value);
-      new_omega.x = sin(theta)*cos(phi);
-      new_omega.y = sin(theta)*sin(phi);
-      new_omega.z = cos(theta);
-      weights.push_back(old_omega.weights[weightPos]/num_div);
-      omegas.emplace_back(new_omega);
-      abscissae.emplace_back(phi,theta);
-      chi::log.Log0()<< "Phi value "<< phi << " Theta value "<<theta;
-      chi::log.Log0()<< "OMEGA x "<< new_omega.x <<
-      " OMEGA Y "<< new_omega.y << " OMEGA Z " << new_omega.z;
-      chi::log.Log0()<< "WEIGHT "<< weights.back();
-    }
-    weightPos++;
-    num_div++;
-  }
-//  chi::Exit(99);
-  //This will loop through the other 3 parts of the unit circle
-  //The order is x,y(done above); -x,y; -x,-y; x,-y
-  double xsign = -1.0;
-  double ysign = 1.0;
-  size_t sizew = weights.size();
-  for(int k=1;k<=3;++k)
-  {
-    if(k>1)
-    {
-      ysign=-1.0;
-      if(k>2) xsign =1.0;
-    }
-    for(size_t l=0;l<sizew;++l)
-    {
-      double phi = abscissae[l].phi+k*(M_PI/2.0);
-      double theta = abscissae[l].theta;
-      new_omega.x = omegas[l].x*xsign;
-      new_omega.y = omegas[l].y*ysign;
-      new_omega.z = omegas[l].z;
-      weights.push_back(weights[l]);
+      double sinTheta = sqrt(1-new_z_value*new_z_value);
+      new_omega.x = sinTheta*cos(phi);
+      new_omega.y = sinTheta*sin(phi);
+      new_omega.z = new_z_value;
+      double weightCurrent = old_omega.weights[weightPos]/(num_div);
+      weights.push_back(old_omega.weights[weightPos]/(num_div));
       omegas.emplace_back(new_omega);
       abscissae.emplace_back(phi,theta);
       chi::log.Log0()<< "Phi value "<< phi << " Theta value "<<theta;
       chi::log.Log0()<< "OMEGA x "<< new_omega.x <<
                      " OMEGA Y "<< new_omega.y << " OMEGA Z " << new_omega.z;
       chi::log.Log0()<< "WEIGHT "<< weights.back();
+      DwriteFile << std::setprecision(16) << "OMEGA x "<< new_omega.x <<
+                 " OMEGA Y "<< new_omega.y
+                 << " OMEGA Z " << new_omega.z <<'\n';
+    }
+    weightPos++;
+    num_div++;
+  }
+
+//  chi::Exit(99);
+  //THIS IS WRONG ORDERING<<< WE NEED TO JUST ADD pi/2 to each former point
+//  double xsign = -1.0;
+//  double ysign = 1.0;
+  //This is the number of points in 1 octant
+  size_t octSize = weights.size();
+  for(int octant=1;octant<=3;++octant)
+  {
+    //This is how much should be added to each phi to get the orientation  right of the first index
+    double offset = M_PI_2*octant;
+//    if(k>1)
+//    {
+//      ysign=-1.0;
+//      if(k>2) xsign =1.0;
+//    }
+    for(size_t point=0;point<octSize;++point)
+    {
+      double phi = abscissae[point].phi+offset;
+      double theta = abscissae[point].theta;
+      double new_z_value = omegas[point].z;
+      double sinTheta = sqrt(1-new_z_value*new_z_value);
+      new_omega.x = sinTheta*cos(phi);//omegas[l].x*xsign;
+      new_omega.y = sinTheta*sin(phi); //omegas[l].y*ysign;
+      new_omega.z = omegas[point].z;
+      weights.push_back(weights[point]);
+      omegas.emplace_back(new_omega);
+      abscissae.emplace_back(phi,theta);
+      chi::log.Log0() << " Z COSINE " << new_omega.z;
+      chi::log.Log0()<< "Phi value "<< phi << " Theta value "<<theta;
+      chi::log.Log0()<< "OMEGA x "<< new_omega.x <<
+                     " OMEGA Y "<< new_omega.y << " OMEGA Z " << new_omega.z;
+      chi::log.Log0()<< "WEIGHT "<< weights.back();
+      DwriteFile << std::setprecision(16) << "OMEGA x "<< new_omega.x <<
+                 " OMEGA Y "<< new_omega.y
+                 << " OMEGA Z " << new_omega.z <<'\n';
     }
   }
+  DwriteFile.close();
   //Now we need to call optimize for polar symmetry to normalize
   // the weights to 4pi to correctly integrate over the sphere
-//  chi_math::AngularQuadrature::OptimizeForPolarSymmetry(4.0*M_PI);
+  chi_math::AngularQuadrature::OptimizeForPolarSymmetry(4.0*M_PI);
 }

@@ -64,7 +64,7 @@ void chi_math::ProductQuadratureOp::CheckInputs()
 
 void chi_math::ProductQuadratureOp::FilterMoments(unsigned int scattering_order)
 {
-  if (m2d_op_built and d2m_op_built)
+  if (m2d_op_built and d2m_op_built and moments!=0)
   {
     int moments_to_keep = 0;
     if (scattering_order >= sn)

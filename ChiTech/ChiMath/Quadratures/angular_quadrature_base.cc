@@ -17,7 +17,7 @@
  *                             positive number is provided, the weights will be
  *                             normalized to sum to this number.*/
 void chi_math::AngularQuadrature::
-  OptimizeForPolarSymmetry(const double normalization)
+   OptimizeForPolarSymmetry(const double normalization)
 {
   std::vector<chi_math::QuadraturePointPhiTheta> new_abscissae;
   std::vector<double>                            new_weights;

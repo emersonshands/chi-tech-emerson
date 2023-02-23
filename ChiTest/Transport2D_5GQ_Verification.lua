@@ -67,13 +67,10 @@ end
 --========== ProdQuad
 sn = 16
 method = 3
-Product = true
-Triangle = false
---scatterOrder = 2*(sn-1)
---quad = chiCreateProductQuadrature(GAUSS_LEGENDRE_CHEBYSHEV,sn/2,sn/2)
---chiOptimizeAngularQuadratureForPolarSymmetry(quad,4.0*math.pi)
+Product = false
+Triangle = true
+weightSum = 0.0
 
---scatterOrder = 4
 if (Product) then
     scatterOrder = 2*(sn-1)
     baseline = chiCreateProductQuadrature(GAUSS_LEGENDRE_CHEBYSHEV,sn/2,sn/2)
@@ -84,6 +81,7 @@ if (Product) then
     tab = chiGetProductQuadrature(quad)
     chiLog(LOG_0, "Checking Values of Quadrature")
     for pl=1,rawlen(tab) do
+        weightSum = weightSum + tab[pl].weight
         chiLog(LOG_0, "\nDirection " .. tostring(pl))
         chiLog(LOG_0, "Weight " .. tostring(tab[pl].weight))
         chiLog(LOG_0, "Polar " .. tostring(tab[pl].polar))
@@ -91,19 +89,21 @@ if (Product) then
         chiLog(LOG_0, "Azimu " .. tostring(tab[pl].azimuthal))
     end
 end
---if (Triangle) then
---    scatterOrder = sn
---    quad = chiCreateAngularQuadratureTriangle(method,sn)
---
---    tab = chiGetTriangleQuadrature(quad)
---    chiLog(LOG_0, "Checking Values of Quadrature")
---    for pl=1,rawlen(tab) do
---        chiLog(LOG_0, "Direction " .. tostring(pl))
---        chiLog(LOG_0, "Weight " .. tostring(tab[pl].weight))
---        chiLog(LOG_0, "Polar " .. tostring(tab[pl].polar))
---        chiLog(LOG_0, "Azimu " .. tostring(tab[pl].azimuthal))
---    end
---end
+if (Triangle) then
+    scatterOrder = sn
+    quad = chiCreateAngularQuadratureTriangle(method,sn)
+
+    tab = chiGetTriangleQuadrature(quad)
+    chiLog(LOG_0, "Checking Values of Quadrature")
+    for pl=1,rawlen(tab) do
+        weightSum = weightSum + tab[pl].weight
+        chiLog(LOG_0, "Direction " .. tostring(pl))
+        chiLog(LOG_0, "Weight " .. tostring(tab[pl].weight))
+        chiLog(LOG_0, "Polar " .. tostring(tab[pl].polar))
+        chiLog(LOG_0, "Azimu " .. tostring(tab[pl].azimuthal))
+    end
+end
+chiLog(LOG_0, "Weight Sum" .. tostring(weightSum))
 --========== Groupset def
 gs0 = chiLBSCreateGroupset(phys1)
 cur_gs = gs0
