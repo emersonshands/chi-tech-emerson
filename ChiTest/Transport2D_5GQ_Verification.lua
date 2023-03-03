@@ -33,6 +33,17 @@ chiMeshCreateUnpartitioned2DOrthoMesh(mesh,mesh)
 --chiVolumeMesherSetProperty(PARTITION_TYPE,KBA_STYLE_XYZ)
 chiVolumeMesherExecute();
 
+--################################################## SETTINGS
+sn = 16
+method = 1
+Product = true
+Triangle = false
+weightSum = 0.0
+--address = "ChiTest/".."xs_quad_test_GQ_S"..sn..".cxs"
+address = "ChiTest/xs_quad_test_GQ_P15.cxs"
+--##################################################
+
+
 --############################################### Set Material IDs
 chiVolumeMesherSetMatIDToAll(0)
 --############################################### Add materials
@@ -46,7 +57,7 @@ chiPhysicsMaterialAddProperty(materials[1],TRANSPORT_XSECTIONS)
 
 num_groups = 1
 chiPhysicsMaterialSetProperty(materials[1],TRANSPORT_XSECTIONS,
-        CHI_XSFILE,"ChiTest/xs_quad_test_GQ.cxs")
+        CHI_XSFILE,address)
 
 --src={}
 --for g=1,num_groups do
@@ -65,14 +76,9 @@ for g=1,num_groups do
 end
 
 --========== ProdQuad
-sn = 16
-method = 3
-Product = false
-Triangle = true
-weightSum = 0.0
 
 if (Product) then
-    scatterOrder = 2*(sn-1)
+    scatterOrder = sn-1--2*(sn-1)
     baseline = chiCreateProductQuadrature(GAUSS_LEGENDRE_CHEBYSHEV,sn/2,sn/2)
     chiOptimizeAngularQuadratureForPolarSymmetry(baseline,4.0*math.pi)
     --quad = chiCreateProductQuadratureOperator(baseline,method,sn)
@@ -114,10 +120,24 @@ chiLBSGroupsetSetAngleAggDiv(phys1,cur_gs,1)
 chiLBSGroupsetSetGroupSubsets(phys1,cur_gs,1)
 chiLBSGroupsetSetIterativeMethod(phys1,cur_gs,KRYLOV_GMRES)
 --chiLBSGroupsetSetIterativeMethod(phys1,cur_gs,NPT_CLASSICRICHARDSON)
-chiLBSGroupsetSetResidualTolerance(phys1,cur_gs,1.92e-8)
+if (sn==4) then
+    chiLBSGroupsetSetResidualTolerance(phys1,cur_gs,7.422e-7)
+end
+if (sn==8) then
+    chiLBSGroupsetSetResidualTolerance(phys1,cur_gs,2.192e-7)
+end
+if (sn==16 and Triangle) then
+    chiLBSGroupsetSetResidualTolerance(phys1,cur_gs,6.0479e-8)
+end
+if (sn==16 and Product) then
+    chiLBSGroupsetSetResidualTolerance(phys1,cur_gs,6.8215104e-8)
+end
+if (sn==32) then
+    chiLBSGroupsetSetResidualTolerance(phys1,cur_gs,1.7272e-8)
+end
 chiLBSGroupsetSetMaxIterations(phys1,cur_gs,150000)
 chiLBSGroupsetSetGMRESRestartIntvl(phys1,cur_gs,10)
-chiLBSGroupsetSetWGDSA(phys1,cur_gs,30,1.0e-10,true)
+chiLBSGroupsetSetWGDSA(phys1,cur_gs,30,1.0e-11,true)
 
 
 
