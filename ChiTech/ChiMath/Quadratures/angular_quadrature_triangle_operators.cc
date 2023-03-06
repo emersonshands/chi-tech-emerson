@@ -124,24 +124,24 @@ BuildDiscreteToMomentOperator
     }
 
     // solve for the weights
-    std::vector<double> wt = {4.0*M_PI};
-    for (size_t i = 1; i < weights.size(); ++i)
-      wt.emplace_back(0.0);
-    auto invt = chi_math::Inverse(cmt);
-    chi::log.Log0() << "THE WT \n";
-    chi_math::PrintVector(wt);
-//    chi::log.Log0() << "The original cmt \n";
-//    chi_math::PrintMatrix(cmt);
-//    chi::log.Log0() << "The inverse cmt \n";
-//    chi_math::PrintMatrix(invt);
-    auto new_weights = chi_math::MatMul(invt, wt);
-    chi::log.Log0() << "The old weights \n";
-    chi_math::PrintVector(weights);
-    chi::log.Log0() << "The new weights \n";
-    chi_math::PrintVector(new_weights);
-    chi::log.Log0() << "NEW SOLVE \n";
-    chi_math::PrintVector(chi_math::GaussEliminationPivot(cmt,wt));
-    weights = new_weights;
+//    std::vector<double> wt = {4.0*M_PI};
+//    for (size_t i = 1; i < weights.size(); ++i)
+//      wt.emplace_back(0.0);
+//    auto invt = chi_math::Inverse(cmt);
+//    chi::log.Log0() << "THE WT \n";
+//    chi_math::PrintVector(wt);
+////    chi::log.Log0() << "The original cmt \n";
+////    chi_math::PrintMatrix(cmt);
+////    chi::log.Log0() << "The inverse cmt \n";
+////    chi_math::PrintMatrix(invt);
+//    auto new_weights = chi_math::MatMul(invt, wt);
+//    chi::log.Log0() << "The old weights \n";
+//    chi_math::PrintVector(weights);
+//    chi::log.Log0() << "The new weights \n";
+//    chi_math::PrintVector(new_weights);
+//    chi::log.Log0() << "NEW SOLVE \n";
+//    chi_math::PrintVector(chi_math::GaussEliminationPivot(cmt,wt));
+//    weights = new_weights;
     for (const auto &ell_em: m_to_ell_em_map)
     {
       std::vector<double> cur_mom;
@@ -195,6 +195,27 @@ BuildDiscreteToMomentOperator
       }
       cmt.push_back(cur_mom);
     }
+
+    // solve for the weights
+    std::vector<double> wt = {4.0*M_PI};
+    for (size_t i = 1; i < weights.size(); ++i)
+      wt.emplace_back(0.0);
+    auto invt = chi_math::Inverse(cmt);
+    chi::log.Log0() << "THE WT \n";
+    chi_math::PrintVector(wt);
+    //    chi::log.Log0() << "The original cmt \n";
+    //    chi_math::PrintMatrix(cmt);
+    //    chi::log.Log0() << "The inverse cmt \n";
+    //    chi_math::PrintMatrix(invt);
+    auto new_weights = chi_math::MatMul(invt, wt);
+    chi::log.Log0() << "The old weights \n";
+    chi_math::PrintVector(weights);
+    chi::log.Log0() << "The new weights \n";
+    chi_math::PrintVector(new_weights);
+    chi::log.Log0() << "NEW SOLVE \n";
+    chi_math::PrintVector(chi_math::GaussEliminationPivot(cmt,wt));
+    weights = new_weights;
+
     //Make the holder for the altered coefficients
     MatDbl cmt_hat=cmt;
     size_t ndir = cmt[0].size();
@@ -363,7 +384,7 @@ BuildMomentToDiscreteOperator
   {
     FilterMoments(scattering_order);
   }
-//  chi::log.Log0() << "The d2m op \n";
-//  chi_math::PrintMatrix(d2m_op);
+  chi::log.Log0() << "The m2d op \n";
+  chi_math::PrintMatrix(m2d_op);
 
 }

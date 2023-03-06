@@ -34,13 +34,13 @@ chiMeshCreateUnpartitioned2DOrthoMesh(mesh,mesh)
 chiVolumeMesherExecute();
 
 --################################################## SETTINGS
-sn = 16
-method = 1
-Product = true
-Triangle = false
+sn = 8
+method = 2
+Product = false
+Triangle = true
 weightSum = 0.0
---address = "ChiTest/".."xs_quad_test_GQ_S"..sn..".cxs"
-address = "ChiTest/xs_quad_test_GQ_P15.cxs"
+address = "ChiTest/".."xs_quad_test_GQ_S"..sn..".cxs"
+--address = "ChiTest/xs_quad_test_GQ_P15.cxs"
 --##################################################
 
 
@@ -382,8 +382,8 @@ leakage2 = chiLBSComputeLeakage(phys1, gs0, 2)
 leakage3 = chiLBSComputeLeakage(phys1, gs0, 3)
 balance = chiLBSComputeBalance(phys1)
 
---chiPrintD2M(pquad)
---chiPrintM2D(pquad)
+chiPrintD2M(pquad)
+chiPrintM2D(pquad)
 --chiCheckIdentity(pquad)
 
 chiLog(LOG_0,"XMax")
