@@ -156,6 +156,8 @@ void chi_math::ProductQuadratureOp::BuildDiscreteToMomentOperator
 //                  " AND DIMENSIONS " << dimension << "\n";
   if (d2m_op_built) return;
   MakeHarmonicIndices(sn,dimension);
+
+
   if (method == 1)
   {
     if (not m2d_op_built) BuildMomentToDiscreteOperator(sn,dimension);
@@ -393,6 +395,8 @@ void chi_math::ProductQuadratureOp::BuildMomentToDiscreteOperator
   std::cout.precision(16);
   if (m2d_op_built) return;
   MakeHarmonicIndices(sn,dimension);
+
+
   if (method ==1)
   {
     chi::log.Log0() << "Building m2d";

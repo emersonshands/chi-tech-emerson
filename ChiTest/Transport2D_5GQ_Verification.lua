@@ -34,13 +34,14 @@ chiMeshCreateUnpartitioned2DOrthoMesh(mesh,mesh)
 chiVolumeMesherExecute();
 
 --################################################## SETTINGS
-sn = 8
-method = 2
+sn = 6
+method = 3
 Product = false
 Triangle = true
 weightSum = 0.0
 address = "ChiTest/".."xs_quad_test_GQ_S"..sn..".cxs"
---address = "ChiTest/xs_quad_test_GQ_P15.cxs"
+--address = "ChiTest/xs_quad_test_GQ_P3.cxs"
+--special = true
 --##################################################
 
 
@@ -97,6 +98,9 @@ if (Product) then
 end
 if (Triangle) then
     scatterOrder = sn
+    if (special) then
+        scatterOrder = 3
+    end
     quad = chiCreateAngularQuadratureTriangle(method,sn)
 
     tab = chiGetTriangleQuadrature(quad)
@@ -134,6 +138,9 @@ if (sn==16 and Product) then
 end
 if (sn==32) then
     chiLBSGroupsetSetResidualTolerance(phys1,cur_gs,1.7272e-8)
+end
+if (sn==8 and special) then
+    chiLBSGroupsetSetResidualTolerance(phys1,cur_gs,1.17776e-6)
 end
 chiLBSGroupsetSetMaxIterations(phys1,cur_gs,150000)
 chiLBSGroupsetSetGMRESRestartIntvl(phys1,cur_gs,10)
@@ -376,14 +383,16 @@ if  master_export == nil then
     chiFFInterpolationExportPython(slice2)
 end
 
+chiPrintD2M(pquad)
+chiPrintM2D(pquad)
+
 leakage0 = chiLBSComputeLeakage(phys1, gs0, 0)
 leakage1 = chiLBSComputeLeakage(phys1, gs0, 1)
 leakage2 = chiLBSComputeLeakage(phys1, gs0, 2)
 leakage3 = chiLBSComputeLeakage(phys1, gs0, 3)
 balance = chiLBSComputeBalance(phys1)
 
-chiPrintD2M(pquad)
-chiPrintM2D(pquad)
+
 --chiCheckIdentity(pquad)
 
 chiLog(LOG_0,"XMax")

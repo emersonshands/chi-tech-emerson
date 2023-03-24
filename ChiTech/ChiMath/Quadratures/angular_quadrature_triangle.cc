@@ -35,7 +35,7 @@ TriangleInit()
   chi::log.Log0() << "Given the method "
                   << method << "\nGiven sn " << sn;
 
-  if (method != 1 and method != 2 and method !=3)
+  if (method != 1 and method != 2 and method !=3 and method!=0)
   {
     printf("The method given is not 1, 2, or 3.\n Please reorder your input.\n "
            "Given value %i\n",method);
@@ -63,7 +63,6 @@ TriangleInit()
   // formulate the triangular quadrature
   VecDbl newZi;
   VecDbl newWeights;
-  std::ofstream DwriteFile("/home/grads/e/emersonshands01/CLASSwork/CheckTriangle.txt",std::ofstream::out);
   for(size_t pos =0;pos<old_omega.qpoints.size();++pos)
   {
     if (old_omega.qpoints[pos].x < 0) continue;
@@ -105,29 +104,17 @@ TriangleInit()
       chi::log.Log0()<< "OMEGA x "<< new_omega.x <<
                      " OMEGA Y "<< new_omega.y << " OMEGA Z " << new_omega.z;
       chi::log.Log0()<< "WEIGHT "<< weights.back();
-      DwriteFile << std::setprecision(16) << "OMEGA x "<< new_omega.x <<
-                 " OMEGA Y "<< new_omega.y
-                 << " OMEGA Z " << new_omega.z <<'\n';
     }
     weightPos++;
     num_div++;
   }
 
-//  chi::Exit(99);
-  //THIS IS WRONG ORDERING<<< WE NEED TO JUST ADD pi/2 to each former point
-//  double xsign = -1.0;
-//  double ysign = 1.0;
   //This is the number of points in 1 octant
   size_t octSize = weights.size();
   for(int octant=1;octant<=3;++octant)
   {
     //This is how much should be added to each phi to get the orientation  right of the first index
     double offset = M_PI_2*octant;
-//    if(k>1)
-//    {
-//      ysign=-1.0;
-//      if(k>2) xsign =1.0;
-//    }
     for(size_t point=0;point<octSize;++point)
     {
       double phi = abscissae[point].phi+offset;
@@ -145,12 +132,9 @@ TriangleInit()
       chi::log.Log0()<< "OMEGA x "<< new_omega.x <<
                      " OMEGA Y "<< new_omega.y << " OMEGA Z " << new_omega.z;
       chi::log.Log0()<< "WEIGHT "<< weights.back();
-      DwriteFile << std::setprecision(16) << "OMEGA x "<< new_omega.x <<
-                 " OMEGA Y "<< new_omega.y
-                 << " OMEGA Z " << new_omega.z <<'\n';
+
     }
   }
-  DwriteFile.close();
   //Now we need to call optimize for polar symmetry to normalize
   // the weights to 4pi to correctly integrate over the sphere
   chi_math::AngularQuadrature::OptimizeForPolarSymmetry(4.0*M_PI);
