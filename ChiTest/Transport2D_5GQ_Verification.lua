@@ -34,13 +34,14 @@ chiMeshCreateUnpartitioned2DOrthoMesh(mesh,mesh)
 chiVolumeMesherExecute();
 
 --################################################## SETTINGS
-sn = 6
-method = 3
+sn = 32
+method = 0
 Product = false
 Triangle = true
 weightSum = 0.0
 address = "ChiTest/".."xs_quad_test_GQ_S"..sn..".cxs"
---address = "ChiTest/xs_quad_test_GQ_P3.cxs"
+--address = "ChiTest/".."xs_quad_test_GQ_S4_delta.cxs"
+--address = "ChiTest/xs_quad_test_GQ_P" .. sn-1 .. ".cxs"
 --special = true
 --##################################################
 
@@ -79,7 +80,7 @@ end
 --========== ProdQuad
 
 if (Product) then
-    scatterOrder = sn-1--2*(sn-1)
+    scatterOrder = 2*(sn-1)
     baseline = chiCreateProductQuadrature(GAUSS_LEGENDRE_CHEBYSHEV,sn/2,sn/2)
     chiOptimizeAngularQuadratureForPolarSymmetry(baseline,4.0*math.pi)
     --quad = chiCreateProductQuadratureOperator(baseline,method,sn)
@@ -91,15 +92,15 @@ if (Product) then
         weightSum = weightSum + tab[pl].weight
         chiLog(LOG_0, "\nDirection " .. tostring(pl))
         chiLog(LOG_0, "Weight " .. tostring(tab[pl].weight))
-        chiLog(LOG_0, "Polar " .. tostring(tab[pl].polar))
-        chiLog(LOG_0, "XCos " .. tostring(math.sin(tab[pl].polar)*math.cos(tab[pl].azimuthal)*tab[pl].weight))
-        chiLog(LOG_0, "Azimu " .. tostring(tab[pl].azimuthal))
+        chiLog(LOG_0, "Polar " .. tostring(tab[pl].polar*180.0/math.pi))
+        chiLog(LOG_0, "XCos " .. tostring(math.sin(tab[pl].polar)*math.cos(tab[pl].azimuthal)))
+        chiLog(LOG_0, "Azimu " .. tostring(tab[pl].azimuthal*180.0/math.pi))
     end
 end
 if (Triangle) then
     scatterOrder = sn
     if (special) then
-        scatterOrder = 3
+        scatterOrder = sn-1
     end
     quad = chiCreateAngularQuadratureTriangle(method,sn)
 
@@ -108,12 +109,14 @@ if (Triangle) then
     for pl=1,rawlen(tab) do
         weightSum = weightSum + tab[pl].weight
         chiLog(LOG_0, "Direction " .. tostring(pl))
-        chiLog(LOG_0, "Weight " .. tostring(tab[pl].weight))
-        chiLog(LOG_0, "Polar " .. tostring(tab[pl].polar))
-        chiLog(LOG_0, "Azimu " .. tostring(tab[pl].azimuthal))
+        chiLog(LOG_0, "Polar " .. tostring(tab[pl].polar*180.0/math.pi))
+        chiLog(LOG_0, "XCos " .. tostring(math.sin(tab[pl].polar)*math.cos(tab[pl].azimuthal)))
+        chiLog(LOG_0, "YCos " .. tostring(math.sin(tab[pl].polar)*math.sin(tab[pl].azimuthal)))
+        chiLog(LOG_0, "ZCos " .. tostring(math.cos(tab[pl].polar)))
+        chiLog(LOG_0, "Azimu " .. tostring(tab[pl].azimuthal*180.0/math.pi))
     end
 end
-chiLog(LOG_0, "Weight Sum" .. tostring(weightSum))
+chiLog(LOG_0, "Weight Sum " .. tostring(weightSum))
 --========== Groupset def
 gs0 = chiLBSCreateGroupset(phys1)
 cur_gs = gs0
@@ -122,28 +125,47 @@ chiLBSGroupsetSetQuadrature(phys1,cur_gs,quad)
 chiLBSGroupsetSetAngleAggregationType(phys1,cur_gs,LBSGroupset.ANGLE_AGG_SINGLE)
 chiLBSGroupsetSetAngleAggDiv(phys1,cur_gs,1)
 chiLBSGroupsetSetGroupSubsets(phys1,cur_gs,1)
+
 chiLBSGroupsetSetIterativeMethod(phys1,cur_gs,KRYLOV_GMRES)
 --chiLBSGroupsetSetIterativeMethod(phys1,cur_gs,NPT_CLASSICRICHARDSON)
-if (sn==4) then
-    chiLBSGroupsetSetResidualTolerance(phys1,cur_gs,7.422e-7)
-end
-if (sn==8) then
-    chiLBSGroupsetSetResidualTolerance(phys1,cur_gs,2.192e-7)
-end
-if (sn==16 and Triangle) then
-    chiLBSGroupsetSetResidualTolerance(phys1,cur_gs,6.0479e-8)
+
+
+chiLBSGroupsetSetResidualTolerance(phys1,cur_gs,1.0e-7)
+
+if (Triangle and not special) then
+    if (sn==4) then
+        chiLBSGroupsetSetResidualTolerance(phys1,cur_gs,7.422e-7)
+    end
+    if (sn==8) then
+        chiLBSGroupsetSetResidualTolerance(phys1,cur_gs,2.192e-7)
+    end
+    if (sn==16) then
+        chiLBSGroupsetSetResidualTolerance(phys1,cur_gs,6.0479e-8)
+    end
+    if (sn==32) then
+        chiLBSGroupsetSetResidualTolerance(phys1,cur_gs,1.7272e-8)
+    end
 end
 if (sn==16 and Product) then
     chiLBSGroupsetSetResidualTolerance(phys1,cur_gs,6.8215104e-8)
 end
-if (sn==32) then
-    chiLBSGroupsetSetResidualTolerance(phys1,cur_gs,1.7272e-8)
+if (special) then
+    if (sn==4) then
+        chiLBSGroupsetSetResidualTolerance(phys1,cur_gs,1.177769165e-6)
+    end
+    if (sn==8) then
+        chiLBSGroupsetSetResidualTolerance(phys1,cur_gs,2.79607613e-7)
+    end
+    if (sn==16) then
+        chiLBSGroupsetSetResidualTolerance(phys1,cur_gs,6.8215104e-8)
+    end
+    if (sn==32) then
+        chiLBSGroupsetSetResidualTolerance(phys1,cur_gs,1.8236475e-8)
+    end
 end
-if (sn==8 and special) then
-    chiLBSGroupsetSetResidualTolerance(phys1,cur_gs,1.17776e-6)
-end
-chiLBSGroupsetSetMaxIterations(phys1,cur_gs,150000)
+chiLBSGroupsetSetMaxIterations(phys1,cur_gs,3000)
 chiLBSGroupsetSetGMRESRestartIntvl(phys1,cur_gs,10)
+
 chiLBSGroupsetSetWGDSA(phys1,cur_gs,30,1.0e-11,true)
 
 
@@ -212,7 +234,7 @@ function luaBoundaryFunctionLeft(cell_global_id,
             g = group_indices[gi]
 
             value = 0.0
-            if ( omega.x > 0 and omega.y > 0 and omega.z >0) then
+            if ( omega.x > 0 and omega.y > 0 ) then--and omega.z >0) then
                 value = 1.0
                 sum = sum + omega.x*weightCurrent
             end
@@ -223,7 +245,7 @@ function luaBoundaryFunctionLeft(cell_global_id,
         end
     end
     for angl=1,dof_count do
-        psi[angl] = psi[angl]/sum/10
+        psi[angl] = psi[angl]/sum/L
         --print("psi value " .. tostring(psi[angl]))
     end
     return psi

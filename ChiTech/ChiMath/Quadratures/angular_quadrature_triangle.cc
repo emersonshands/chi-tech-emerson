@@ -89,7 +89,7 @@ TriangleInit()
     for(int v=0; v<num_div;++v)
     {
       double new_z_value = abs(u.x);
-      chi::log.Log0() << " Z COSINE " << new_z_value;
+      chi::log.Log0() << std::setprecision(16) << " Z COSINE " << new_z_value;
       double phi = deltaVPhi/2.0 + (double)v*deltaVPhi;
       double theta = acos(new_z_value);
       double sinTheta = sqrt(1-new_z_value*new_z_value);
@@ -97,7 +97,7 @@ TriangleInit()
       new_omega.y = sinTheta*sin(phi);
       new_omega.z = new_z_value;
       double weightCurrent = old_omega.weights[weightPos]/(num_div);
-      weights.push_back(old_omega.weights[weightPos]/(num_div));
+      weights.push_back(old_omega.weights[weightPos]*(M_PI/(2.0*num_div)));
       omegas.emplace_back(new_omega);
       abscissae.emplace_back(phi,theta);
       chi::log.Log0()<< "Phi value "<< phi << " Theta value "<<theta;
@@ -128,14 +128,69 @@ TriangleInit()
       omegas.emplace_back(new_omega);
       abscissae.emplace_back(phi,theta);
       chi::log.Log0() << " Z COSINE " << new_omega.z;
-      chi::log.Log0()<< "Phi value "<< phi << " Theta value "<<theta;
+      chi::log.Log0()<< "Phi value original "<< phi << "Theta value "<<theta;
       chi::log.Log0()<< "OMEGA x "<< new_omega.x <<
                      " OMEGA Y "<< new_omega.y << " OMEGA Z " << new_omega.z;
       chi::log.Log0()<< "WEIGHT "<< weights.back();
 
     }
   }
+//  //This builds the negative zi values
+//  size_t hemisize = weights.size();
+//  for(int position=0;position<hemisize;++position)
+//  {
+//
+//    new_omega.x = omegas[position].x;//omegas[l].x*xsign;
+//    new_omega.y = omegas[position].y; //omegas[l].y*ysign;
+//    new_omega.z = -omegas[position].z;
+//    double new_z_value = -omegas[position].z;
+//    double phi = abscissae[position].phi;
+//    double theta = acos(new_z_value);
+//    weights.push_back(weights[position]);
+//    omegas.emplace_back(new_omega);
+//    abscissae.emplace_back(phi,theta);
+//    chi::log.Log0() << " Z COSINE " << new_omega.z;
+//    chi::log.Log0()<< "Phi value " << phi << " Theta value "<<theta;
+//    chi::log.Log0()<< "OMEGA x "<< new_omega.x <<
+//                   " OMEGA Y "<< new_omega.y << " OMEGA Z " << new_omega.z;
+//    chi::log.Log0()<< "WEIGHT "<< weights.back();
+//    chi::log.Log0()<< "OMEGA Z NEGATIVE: " << new_omega.z << "; VS COS OF NEW THETA:" << cos(theta);
+//  }
+
+  chi_math::AngularQuadrature::OptimizeForPolarSymmetry(4.0*M_PI);
   //Now we need to call optimize for polar symmetry to normalize
   // the weights to 4pi to correctly integrate over the sphere
-  chi_math::AngularQuadrature::OptimizeForPolarSymmetry(4.0*M_PI);
+//  if (method!=0){
+//    chi_math::AngularQuadrature::OptimizeForPolarSymmetry(4.0*M_PI);
+//  }
+//  else
+//  {
+//    double normal = 4.0*M_PI;
+//    std::vector<chi_math::QuadraturePointPhiTheta> new_abscissae;
+//    std::vector<double>                            new_weights;
+//    std::vector<chi_mesh::Vector3>                 new_omegas;
+//
+//    const size_t num_dirs = omegas.size();
+//    double weight_sum = 0.0;
+//    for (size_t d=0; d<num_dirs; ++d)
+//      if (omegas[d].y > 0.0)
+//      {
+//        new_abscissae.emplace_back(abscissae[d]);
+//        new_weights.emplace_back(weights[d]);
+//        new_omegas.emplace_back(omegas[d]);
+//        std::cout<<"Current Omega: x: "<< omegas[d].x <<
+//        ", y: "<< omegas[d].y<< ", z: "<< omegas[d].z << std::endl;
+//        std::cout<<"Current Angle: phi: "<< abscissae[d].phi <<
+//                 ", theta: "<< abscissae[d].theta << std::endl;
+//        weight_sum += weights[d];
+//      }
+//
+//    if (normal > 0.0)
+//      for (double& w : new_weights)
+//        w *= normal/weight_sum;
+//
+//    abscissae = std::move(new_abscissae);
+//    weights   = std::move(new_weights);
+//    omegas    = std::move(new_omegas);
+//  }
 }

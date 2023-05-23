@@ -1,3 +1,4 @@
+#include <iomanip>
 #include "chi_runtime.h"
 #include "ChiLua/chi_lua.h"
 #include "chi_log.h"
@@ -96,15 +97,24 @@ int chiPrintD2M(lua_State* L)
     weightsum += u;
     chi::log.Log() << u;
   }
-  chi::log.Log() << "Weight sum " << weightsum;
-  chi::log.Log() << "Integrating Zi";
-  for (size_t i =0;i<sizew;++i)
-  {
-    double weightVal =an_quad->weights[i];
-    double zival = an_quad->omegas[i].z;
-    sum +=  weightVal * zival;
-  }
-  chi::log.Log() << sum;
+  chi::log.Log() << "Weight sum " << std::setprecision(16) << weightsum;
+//  chi::log.Log() << "Integrating Zi";
+//  for (size_t i =0;i<sizew/4;++i)
+//  {
+//    double weightVal =an_quad->weights[i];
+//    double zival = an_quad->omegas[i].z;
+//    sum +=  weightVal * zival;
+//  }
+//  chi::log.Log() << std::setprecision(16) << sum;
+//  chi::log.Log() << "Integrating mu";
+//  sum = 0.0;
+//  for (size_t i =0;i<sizew/2;++i)
+//  {
+//    double weightVal =an_quad->weights[i];
+//    double xval = an_quad->omegas[i].x;
+//    sum +=  weightVal * xval;
+//  }
+//  chi::log.Log() << std::setprecision(16) << sum;
   //PRINTING D2M
 
 

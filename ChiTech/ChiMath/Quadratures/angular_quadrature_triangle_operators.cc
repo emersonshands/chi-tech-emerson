@@ -53,21 +53,34 @@ MakeHarmonicIndices(unsigned int scattering_order, int dimension)
 {
   int L = static_cast<int>(sn);
   int L_max = static_cast<int>(scattering_order);
-  if (method == 0 and m_to_ell_em_map.empty())
-  {
-    for (int ell=0; ell<=L; ell++)
-      for (int m=-ell; m<=ell; m+=2)
-      {
-        m_to_ell_em_map.emplace_back(ell, m);
-        chi::log.Log0() << "l " << ell << " and m "<< m << "\n";
-      }
-  }
+//  if (method == 0 and m_to_ell_em_map.empty())
+//  {
+//    for (int ell=0; ell<=L_max; ell++)
+//      for (int m=-ell; m<=ell; m+=2)
+//      {
+//        m_to_ell_em_map.emplace_back(ell, m);
+//        chi::log.Log0() << "l " << ell << " and m "<< m << "\n";
+//      }
+//  }
+//TESTING FOR RZ CONVERGENCE<RZ HARMONICS
+//  if (method == 0 and m_to_ell_em_map.empty())
+//  {
+//    for (int ell=0; ell<=L_max; ell++)
+//      for (int m=0; m<=ell; m+=1)
+//      {
+//        if (ell==L and (m+ell) % 2 == 0)
+//          continue;
+//        m_to_ell_em_map.emplace_back(ell, m);
+//        chi::log.Log0() << "l " << ell << " and m "<< m << "\n";
+//      }
+//  }
+    //STANDARD HARMONICS
   if (m_to_ell_em_map.empty() )
   {
     for (int ell = 0; ell <= L_max; ++ell)
       for (int m = -ell; m <= ell; m += 2)
       {
-        if (ell == L and m >= 0 and ell != 0) break;
+        if (ell == L and m>= 0 and ell != 0) break;
         else m_to_ell_em_map.emplace_back(ell, m);
         chi::log.Log0() << "l " << ell << " and m "<< m << "\n";
       }
@@ -157,6 +170,13 @@ BuildDiscreteToMomentOperator
       d2m_op.push_back(cur_mom);
     }
     d2m_op_built = true;
+    chi::log.Log0() << "The d2m op \n";
+    for (auto &row:d2m_op)
+    {
+      for (auto &element: row)
+        std::cout << std::setprecision(16) << element << " ";
+      std::cout << std::endl;
+    }
   }
   if (method == 1)
   {
@@ -202,24 +222,24 @@ BuildDiscreteToMomentOperator
     }
 
 //     solve for the weights
-    std::vector<double> wt = {4.0*M_PI};
-    for (size_t i = 1; i < weights.size(); ++i)
-      wt.emplace_back(0.0);
-    auto invt = chi_math::Inverse(cmt);
-    chi::log.Log0() << "THE WT \n";
-    chi_math::PrintVector(wt);
-//    chi::log.Log0() << "The original cmt \n";
-//    chi_math::PrintMatrix(cmt);
-//    chi::log.Log0() << "The inverse cmt \n";
-//    chi_math::PrintMatrix(invt);
-    auto new_weights = chi_math::MatMul(invt, wt);
-    chi::log.Log0() << "The old weights \n";
-    chi_math::PrintVector(weights);
-    chi::log.Log0() << "The new weights \n";
-    chi_math::PrintVector(new_weights);
-    chi::log.Log0() << "NEW SOLVE \n";
-    chi_math::PrintVector(chi_math::GaussEliminationPivot(cmt,wt));
-    weights = new_weights;
+//    std::vector<double> wt = {4.0*M_PI};
+//    for (size_t i = 1; i < weights.size(); ++i)
+//      wt.emplace_back(0.0);
+//    auto invt = chi_math::Inverse(cmt);
+//    chi::log.Log0() << "THE WT \n";
+//    chi_math::PrintVector(wt);
+////    chi::log.Log0() << "The original cmt \n";
+////    chi_math::PrintMatrix(cmt);
+////    chi::log.Log0() << "The inverse cmt \n";
+////    chi_math::PrintMatrix(invt);
+//    auto new_weights = chi_math::MatMul(invt, wt);
+//    chi::log.Log0() << "The old weights \n";
+//    chi_math::PrintVector(weights);
+//    chi::log.Log0() << "The new weights \n";
+//    chi_math::PrintVector(new_weights);
+//    chi::log.Log0() << "NEW SOLVE \n";
+//    chi_math::PrintVector(chi_math::GaussEliminationPivot(cmt,wt));
+//    weights = new_weights;
 
     for (const auto &ell_em: m_to_ell_em_map)
     {
@@ -299,22 +319,22 @@ BuildDiscreteToMomentOperator
       cmt.push_back(cur_mom);
     }
 
-    // solve for the weights
-    std::vector<double> wt = {4.0*M_PI};
-    for (size_t i = 1; i < weights.size(); ++i)
-      wt.emplace_back(0.0);
-    chi::log.Log0() << "THE WT \n";
-    chi_math::PrintVector(wt);
-    auto new_weights = chi_math::GaussEliminationPivot(cmt,wt);
-    chi::log.Log0() << "The old weights \n";
-    for (auto& xi : weights)
-      std::cout << std::setprecision(16) <<xi << ' ';
-    std::cout << std::endl;
-    chi::log.Log0() << "The new weights \n";
-    for (auto& xi : new_weights)
-      std::cout << std::setprecision(16) <<xi << ' ';
-    std::cout << std::endl;
-    weights = new_weights;
+//    // solve for the weights
+//    std::vector<double> wt = {4.0*M_PI};
+//    for (size_t i = 1; i < weights.size(); ++i)
+//      wt.emplace_back(0.0);
+//    chi::log.Log0() << "THE WT \n";
+//    chi_math::PrintVector(wt);
+//    auto new_weights = chi_math::GaussEliminationPivot(cmt,wt);
+//    chi::log.Log0() << "The old weights \n";
+//    for (auto& xi : weights)
+//      std::cout << std::setprecision(16) <<xi << ' ';
+//    std::cout << std::endl;
+//    chi::log.Log0() << "The new weights \n";
+//    for (auto& xi : new_weights)
+//      std::cout << std::setprecision(16) <<xi << ' ';
+//    std::cout << std::endl;
+//    weights = new_weights;
 
 
     //##############################################
@@ -338,16 +358,15 @@ BuildDiscreteToMomentOperator
         productIntegral += value*value*weights[j];
       }
       chi::log.Log0() << "####################";
-      chi::log.Log0() << "Integral Value         : " << std::setprecision(16) << integralVal;
-      chi::log.Log0() << "Product Integral Value : " << std::setprecision(16) << productIntegral;
-      chi::log.Log0() << "4pi/2l+1               : " << std::setprecision(16) << 4.0*M_PI/(2.0*em_l_current.ell+1.0);
+      chi::log.Log0() << "Integral Value         : " << std::setprecision(16) << ((2.0*em_l_current.ell+1.0)/(4.0*M_PI))*integralVal;
+      chi::log.Log0() << "Product Integral Value : " << std::setprecision(16) << ((2.0*em_l_current.ell+1.0)/(4.0*M_PI))*productIntegral;
+//      chi::log.Log0() << "4pi/2l+1               : " << std::setprecision(16) << 4.0*M_PI/(2.0*em_l_current.ell+1.0);
       chi::log.Log0() << "Ratio of error         : " << std::setprecision(16) <<
       (4.0*M_PI/(2.0*em_l_current.ell+1.0)-abs(productIntegral))/
                                                         (4.0*M_PI/(2.0*em_l_current.ell+1.0));
     }
 
     //##############################################
-
 
     //Make the holder for the altered coefficients
     MatDbl cmt_hat=cmt;
@@ -453,6 +472,20 @@ BuildDiscreteToMomentOperator
 //    m2d_op = chi_math::Transpose(holder_m2d); This is the normal method but due to a bug this must be entered without transpose
     m2d_op = holder_m2d;
     d2m_op_built = true;
+    chi::log.Log0() << "The d2m op \n";
+    for (auto &row:d2m_op)
+    {
+      for (auto &element:row)
+        std::cout<<std::setprecision(16) << element << " ";
+      std::cout << std::endl;
+    }
+    chi::log.Log0() << "The m2d op \n";
+    for (auto &row:m2d_op)
+    {
+      for (auto &element:row)
+        std::cout<<std::setprecision(16) << element << " ";
+      std::cout << std::endl;
+    }
   }
 //  if (scattering_order < sn and method!=3 and method!=0)
 //  {
@@ -552,7 +585,12 @@ BuildMomentToDiscreteOperator
 //    FilterMoments(scattering_order);
 //  }
   chi::log.Log0() << "The m2d op \n";
-  chi_math::PrintMatrix(m2d_op);
+  for (auto &row:m2d_op)
+  {
+    for (auto &element:row)
+      std::cout<<std::setprecision(16) << element << " ";
+    std::cout << std::endl;
+  }
   chi::log.Log0() << "Check Identity \n";
   auto B =chi_math::MatMul(m2d_op,chi_math::Transpose(d2m_op));
   for (auto &row:B)
