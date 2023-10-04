@@ -34,14 +34,15 @@ chiMeshCreateUnpartitioned2DOrthoMesh(mesh,mesh)
 chiVolumeMesherExecute();
 
 --################################################## SETTINGS
-sn = 32
-method = 0
+sn = 8
+method = 3
 Product = false
 Triangle = true
 weightSum = 0.0
+pn = 3
 address = "ChiTest/".."xs_quad_test_GQ_S"..sn..".cxs"
---address = "ChiTest/".."xs_quad_test_GQ_S4_delta.cxs"
---address = "ChiTest/xs_quad_test_GQ_P" .. sn-1 .. ".cxs"
+--address = "ChiTest/".."xs_quad_test_GQ_S"..sn.."_trunc.cxs"
+--address = "ChiTest/xs_quad_test_GQ_P" .. pn .. ".cxs"
 --special = true
 --##################################################
 
@@ -100,7 +101,7 @@ end
 if (Triangle) then
     scatterOrder = sn
     if (special) then
-        scatterOrder = sn-1
+        scatterOrder = pn
     end
     quad = chiCreateAngularQuadratureTriangle(method,sn)
 
@@ -132,7 +133,7 @@ chiLBSGroupsetSetIterativeMethod(phys1,cur_gs,KRYLOV_GMRES)
 
 chiLBSGroupsetSetResidualTolerance(phys1,cur_gs,1.0e-7)
 
-if (Triangle and not special) then
+if (Triangle) then --and not special) then
     if (sn==4) then
         chiLBSGroupsetSetResidualTolerance(phys1,cur_gs,7.422e-7)
     end
@@ -149,7 +150,7 @@ end
 if (sn==16 and Product) then
     chiLBSGroupsetSetResidualTolerance(phys1,cur_gs,6.8215104e-8)
 end
-if (special) then
+if (special and false) then
     if (sn==4) then
         chiLBSGroupsetSetResidualTolerance(phys1,cur_gs,1.177769165e-6)
     end

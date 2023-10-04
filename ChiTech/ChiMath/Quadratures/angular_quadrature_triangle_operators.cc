@@ -26,7 +26,7 @@ double InnerProduct(const VecDbl& f, const VecDbl& g, const VecDbl& wt)
 
 void chi_math::AngularQuadratureTriangle::FilterMoments(unsigned int scattering_order)
 {
-  if (m2d_op_built and d2m_op_built and moments!=0)
+  if (m2d_op_built and d2m_op_built and moments>=0)
   {
     int s_order = static_cast<int>(scattering_order);
     int moments_to_keep = 1 +
@@ -53,15 +53,15 @@ MakeHarmonicIndices(unsigned int scattering_order, int dimension)
 {
   int L = static_cast<int>(sn);
   int L_max = static_cast<int>(scattering_order);
-//  if (method == 0 and m_to_ell_em_map.empty())
-//  {
-//    for (int ell=0; ell<=L_max; ell++)
-//      for (int m=-ell; m<=ell; m+=2)
-//      {
-//        m_to_ell_em_map.emplace_back(ell, m);
-//        chi::log.Log0() << "l " << ell << " and m "<< m << "\n";
-//      }
-//  }
+  if (method == 0 and m_to_ell_em_map.empty())
+  {
+    for (int ell=0; ell<=L_max; ell++)
+      for (int m=-ell; m<=ell; m+=2)
+      {
+        m_to_ell_em_map.emplace_back(ell, m);
+        chi::log.Log0() << "l " << ell << " and m "<< m << "\n";
+      }
+  }
 //TESTING FOR RZ CONVERGENCE<RZ HARMONICS
 //  if (method == 0 and m_to_ell_em_map.empty())
 //  {
@@ -75,8 +75,16 @@ MakeHarmonicIndices(unsigned int scattering_order, int dimension)
 //      }
 //  }
     //STANDARD HARMONICS
-  if (m_to_ell_em_map.empty() )
+  if (m_to_ell_em_map.empty() and method != 3)
   {
+    for (int ell = 0; ell <= L; ++ell)
+      for (int m = -ell; m <= ell; m += 2)
+      {
+        if (ell == L and m>= 0 and ell != 0) break;
+        else m_to_ell_em_map.emplace_back(ell, m);
+        chi::log.Log0() << "l " << ell << " and m "<< m << "\n";
+      }
+  } else if (m_to_ell_em_map.empty()){
     for (int ell = 0; ell <= L_max; ++ell)
       for (int m = -ell; m <= ell; m += 2)
       {
@@ -222,24 +230,26 @@ BuildDiscreteToMomentOperator
     }
 
 //     solve for the weights
-//    std::vector<double> wt = {4.0*M_PI};
-//    for (size_t i = 1; i < weights.size(); ++i)
-//      wt.emplace_back(0.0);
-//    auto invt = chi_math::Inverse(cmt);
-//    chi::log.Log0() << "THE WT \n";
+    std::vector<double> wt = {4.0*M_PI};
+    for (size_t i = 1; i < m_to_ell_em_map.size(); ++i)
+      wt.emplace_back(0.0);
+    chi::log.Log0() << "The original cmt \n";
+    chi_math::PrintMatrix(cmt);
+    auto invt = chi_math::Inverse(cmt);
+    chi::log.Log0() << "THE WT \n";
+    chi_math::PrintVector(wt);
+    chi::log.Log0() << "The inverse cmt \n";
+    chi_math::PrintMatrix(invt);
+    auto new_weights = chi_math::MatMul(invt, wt);
+    chi::log.Log0() << "The old weights \n";
+    chi_math::PrintVector(weights);
+    chi::log.Log0() << "The new weights \n";
+    chi_math::PrintVector(new_weights);
+    chi::log.Log0() << "NEW SOLVE \n";
+//    chi_math::GaussEliminationPivot(cmt,wt);
+//    auto new_weights = wt;
 //    chi_math::PrintVector(wt);
-////    chi::log.Log0() << "The original cmt \n";
-////    chi_math::PrintMatrix(cmt);
-////    chi::log.Log0() << "The inverse cmt \n";
-////    chi_math::PrintMatrix(invt);
-//    auto new_weights = chi_math::MatMul(invt, wt);
-//    chi::log.Log0() << "The old weights \n";
-//    chi_math::PrintVector(weights);
-//    chi::log.Log0() << "The new weights \n";
-//    chi_math::PrintVector(new_weights);
-//    chi::log.Log0() << "NEW SOLVE \n";
-//    chi_math::PrintVector(chi_math::GaussEliminationPivot(cmt,wt));
-//    weights = new_weights;
+    weights = new_weights;
 
     for (const auto &ell_em: m_to_ell_em_map)
     {
@@ -367,33 +377,71 @@ BuildDiscreteToMomentOperator
     }
 
     //##############################################
-
+    //CLASSICAL GRAM SCHMIDT
     //Make the holder for the altered coefficients
     MatDbl cmt_hat=cmt;
-    for (size_t i = 1;i<num_moms;++i)
-    {
-      VecDbl current_vec = cmt[i];
-      VecDbl sum_val(num_angles);
-      //Do GS- and go through every previous row to get the new row
-      for (int j=0;j<i;++j)
-      {
-        //Do GS- and go through every previous row to get the new row
-        VecDbl previous_vec_hat = cmt_hat[j];
-        double multiplier = InnerProduct(previous_vec_hat, current_vec, weights)
-                            / InnerProduct(previous_vec_hat,
-                                           previous_vec_hat, weights);
-        for (int o = 0; o < num_angles; ++o)
-          sum_val[o] += previous_vec_hat[o]*multiplier;
-      }
-      cmt_hat[i] = current_vec - sum_val;
-    }
 
+//    for (size_t i = 0;i<num_moms;++i)
+//    {
+//      VecDbl current_vec = cmt[i];
+//      VecDbl sum_val(num_angles);
+//      //Do GS- and go through every previous row to get the new row
+//      for (int j=0;j<i;++j)
+//      {
+//        //Do GS- and go through every previous row to get the new row
+//        VecDbl previous_vec_hat = cmt_hat[j];
+//        double multiplier = InnerProduct(previous_vec_hat, current_vec, weights)
+//                            / InnerProduct(previous_vec_hat,
+//                                           previous_vec_hat, weights);
+//        for (int o = 0; o < num_angles; ++o)
+//          sum_val[o] += previous_vec_hat[o]*multiplier;
+//      }
+//      cmt_hat[i] = current_vec - sum_val;
+////      cmt_hat[i] = chi_math::VecMul(cmt_hat[i],1.0/InnerProduct(cmt_hat[i],cmt_hat[i],weights));
+//    }
+
+//    //MODIFIED GRAM SCHMIDT
+
+    chi::log.Log0() << "####################";
+//    VecDbl L(num_moms,0.0);
+//    for (size_t i = 0;i<num_moms;++i)
+//      L[i] = InnerProduct(cmt_hat[i], cmt_hat[i], weights);
+//    chi::log.Log0() << "L NORM";
+//    chi_math::PrintVector(L);
+    MatDbl V = cmt_hat;
+    chi::log.Log0() << "R PRE NORM";
+    chi_math::PrintMatrix(V);
+//    for (size_t j = 0; j< num_moms;++j)
+//      V[j] = chi_math::VecMul(V[j],1.0/L[j]);
+//    chi::log.Log0() << "R POST NORM";
+//    chi_math::PrintMatrix(V);
+    MatDbl B = V;
+    for (size_t i=0;i<num_moms;++i){
+      B[i] = chi_math::VecMul(V[i],1.0/ InnerProduct(V[i],V[i],weights));
+      for (size_t k=i+1;k<num_moms;++k){
+        V[k] = V[k] - chi_math::VecMul(B[i], InnerProduct(V[i],V[k],weights));
+      }
+    }
+    chi::log.Log0() << "CHECK B";
+    chi_math::PrintMatrix(B);
+    chi::log.Log0() << "V POST NORM";
+    chi_math::PrintMatrix(V);
+    cmt_hat = B;
+
+    // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     chi::log.Log() << "Printing the original cmt";
     chi_math::PrintMatrix(cmt);
 
     chi::log.Log() << "Printing cmt hat pre normalization matrix";
     chi_math::PrintMatrix(cmt_hat);
 
+    chi::log.Log0() << "Check for orthogonalization";
+    auto A = chi_math::MatMul(cmt_hat,chi_math::Transpose(cmt_hat));
+    for (auto &row:A)
+      for (auto &element:row)
+        if (element<1e-10)
+          element=0.0;
+    chi_math::PrintMatrix(A);
 
     //Now to normalize the values
     for (int i = 0; i<num_moms;++i)
@@ -401,6 +449,7 @@ BuildDiscreteToMomentOperator
       auto ell = m_to_ell_em_map[i].ell;
       chi::log.Log0() << "Normalized to inner product of " << InnerProduct(cmt_hat[i],cmt_hat[i],weights);
       double normal = (4.0*M_PI)/(2.0*ell+1.0);
+      chi::log.Log0() << "EXPECTED VALUE OF: " << normal;
       double multiplier = sqrt(normal /
                                InnerProduct(cmt_hat[i],cmt_hat[i],weights));
       chi::log.Log0() << "Multiplier of " << multiplier;
@@ -444,7 +493,7 @@ BuildDiscreteToMomentOperator
 
 
     chi::log.Log0() << "Check for orthogonalization";
-    auto A = chi_math::MatMul(cmt_hat,chi_math::Transpose(cmt_hat));
+    A = chi_math::MatMul(cmt_hat,chi_math::Transpose(cmt_hat));
     for (auto &row:A)
       for (auto &element:row)
         if (element<1e-10)
@@ -487,10 +536,11 @@ BuildDiscreteToMomentOperator
       std::cout << std::endl;
     }
   }
-//  if (scattering_order < sn and method!=3 and method!=0)
-//  {
-//    FilterMoments(scattering_order);
-//  }
+  if (scattering_order < sn and method!=3 and method!=0)
+  {
+    chi::log.Log0() << "The SCATTERING ORDER \n" << scattering_order;
+    FilterMoments(scattering_order);
+  }
 }
 
 void chi_math::AngularQuadratureTriangle::
@@ -580,10 +630,11 @@ BuildMomentToDiscreteOperator
                                     dimension);
     m2d_op_built = true;
   }
-//  if (scattering_order < sn and method!=3 and method!=0)
-//  {
-//    FilterMoments(scattering_order);
-//  }
+  if (scattering_order < sn and method!=3 and method!=0)
+  {
+    chi::log.Log0() << "The SCATTERING ORDER \n" << scattering_order;
+    FilterMoments(scattering_order);
+  }
   chi::log.Log0() << "The m2d op \n";
   for (auto &row:m2d_op)
   {
@@ -591,11 +642,13 @@ BuildMomentToDiscreteOperator
       std::cout<<std::setprecision(16) << element << " ";
     std::cout << std::endl;
   }
-  chi::log.Log0() << "Check Identity \n";
-  auto B =chi_math::MatMul(m2d_op,chi_math::Transpose(d2m_op));
-  for (auto &row:B)
-    for (auto &element:row)
-      if (element<1e-8)
-        element=0.0;
-  chi_math::PrintMatrix(B);
+  if(d2m_op_built){
+    chi::log.Log0() << "Check Identity \n";
+    auto B =chi_math::MatMul(m2d_op,chi_math::Transpose(d2m_op));
+    for (auto &row:B)
+      for (auto &element:row)
+        if (element<1e-8)
+          element=0.0;
+    chi_math::PrintMatrix(B);
+  }
 }
