@@ -22,7 +22,7 @@ num_procs = 20
 chiMeshHandlerCreate()
 mesh={}
 N=65
-L=10.0
+L=1.0
 xmin = 0
 dx = L/N
 for i=1,(N+1) do
@@ -34,19 +34,61 @@ chiMeshCreateUnpartitioned2DOrthoMesh(mesh,mesh)
 chiVolumeMesherExecute();
 
 --################################################## SETTINGS
-sn = 8
+sn = 64
 method = 3
 Product = false
 Triangle = true
 weightSum = 0.0
 pn = 3
-address = "ChiTest/".."xs_quad_test_GQ_S"..sn..".cxs"
+--address = "ChiTest/".."xs_quad_test_GQ_S"..sn..".cxs"
 --address = "ChiTest/".."xs_quad_test_GQ_S"..sn.."_trunc.cxs"
+address = "ChiTest/".."xs_quad_test_GQ_S4_trad.cxs"
+--address = "ChiTest/".."xs_quad_test_GQ_S8_trad.cxs"
+--address = "ChiTest/".."xs_quad_test_GQ_S"..sn.."_trad.cxs"
 --address = "ChiTest/xs_quad_test_GQ_P" .. pn .. ".cxs"
---special = true
+--address = "ChiTest/xs_quad_test_GQ_S32_transport.cxs"
+special = true
+ComputeGrab = true
+--trP = true
 --##################################################
-
-
+if ComputeGrab then
+    local sig0 = 0.0
+    local sigt = 1.0
+    local sep = '%s'
+    local grab = false
+    local grabdis = 0
+    local crossL = {}
+    converge = tonumber(1.0E-5)
+    --print(converge)
+    for line in io.lines(address) do
+        if line == 'TRANSFER_MOMENTS_BEGIN' then
+            grab = true
+            goto continue
+        end
+        if grab and grabdis<1 then
+            grabdis = grabdis + 1
+            --print("line")
+            --print(string.sub(line,-14))
+            --print("Grabbed values")
+            for str in string.gmatch(string.sub(line,-13), "([^"..sep.."]+)") do
+                table.insert(crossL, tonumber(str))
+                --print(str)
+            end
+        end
+        ::continue::
+    end
+    --print('Looking at table:')
+    --for a,b in pairs(crossL) do
+    --    print(a, b)
+    --end
+    if #crossL >0 then
+        sig0 = crossL[#crossL]
+        sigt = sig0+0.1
+        --print(sigt)
+        converge = converge * (1.0-sig0/sigt)
+    end
+    print("Convergence: " .. converge)
+end
 --############################################### Set Material IDs
 chiVolumeMesherSetMatIDToAll(0)
 --############################################### Add materials
@@ -130,10 +172,10 @@ chiLBSGroupsetSetGroupSubsets(phys1,cur_gs,1)
 chiLBSGroupsetSetIterativeMethod(phys1,cur_gs,KRYLOV_GMRES)
 --chiLBSGroupsetSetIterativeMethod(phys1,cur_gs,NPT_CLASSICRICHARDSON)
 
-
-chiLBSGroupsetSetResidualTolerance(phys1,cur_gs,1.0e-7)
-
-if (Triangle) then --and not special) then
+if (ComputeGrab) then
+    chiLBSGroupsetSetResidualTolerance(phys1,cur_gs,converge)
+end
+if (Triangle and not special and not ComputeGrab) then
     if (sn==4) then
         chiLBSGroupsetSetResidualTolerance(phys1,cur_gs,7.422e-7)
     end
@@ -147,21 +189,24 @@ if (Triangle) then --and not special) then
         chiLBSGroupsetSetResidualTolerance(phys1,cur_gs,1.7272e-8)
     end
 end
-if (sn==16 and Product) then
-    chiLBSGroupsetSetResidualTolerance(phys1,cur_gs,6.8215104e-8)
-end
-if (special and false) then
+--if (sn==16 and Product) then
+--    chiLBSGroupsetSetResidualTolerance(phys1,cur_gs,6.8215104e-8)
+--end
+if (special and not ComputeGrab) then
     if (sn==4) then
-        chiLBSGroupsetSetResidualTolerance(phys1,cur_gs,1.177769165e-6)
+        chiLBSGroupsetSetResidualTolerance(phys1,cur_gs,3.85448639e-7)
     end
     if (sn==8) then
-        chiLBSGroupsetSetResidualTolerance(phys1,cur_gs,2.79607613e-7)
+        chiLBSGroupsetSetResidualTolerance(phys1,cur_gs,1.10845842e-7)
     end
     if (sn==16) then
-        chiLBSGroupsetSetResidualTolerance(phys1,cur_gs,6.8215104e-8)
+        chiLBSGroupsetSetResidualTolerance(phys1,cur_gs,3.0331229e-8)
     end
     if (sn==32) then
-        chiLBSGroupsetSetResidualTolerance(phys1,cur_gs,1.8236475e-8)
+        chiLBSGroupsetSetResidualTolerance(phys1,cur_gs,8.643711e-9)
+    end
+    if (trP) then
+        chiLBSGroupsetSetResidualTolerance(phys1,cur_gs,3.99844e-9)
     end
 end
 chiLBSGroupsetSetMaxIterations(phys1,cur_gs,3000)
